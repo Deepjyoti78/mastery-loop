@@ -1,0 +1,211 @@
+{
+    "topic_overview": {
+        "subject": "Operating Systems",
+        "topic": "CPU Scheduling",
+        "goal": "Deep Mastery",
+        "estimated_total_time": "180 min",
+        "description": "Master the art of process scheduling, from basic criteria to complex algorithms like Round Robin and Multilevel Feedback Queues."
+    },
+    "concept_nodes": [
+        {
+            "id": "os_sched_01",
+            "title": "CPU-I/O Burst Cycle",
+            "micro_description": "Understanding process execution behavior.",
+            "difficulty": "Easy",
+            "estimated_time": "15 min"
+        },
+        {
+            "id": "os_sched_02",
+            "title": "Dispatcher & Latency",
+            "micro_description": "The mechanism of switching control to a process.",
+            "difficulty": "Easy",
+            "estimated_time": "20 min"
+        },
+        {
+            "id": "os_sched_03",
+            "title": "Scheduling Criteria",
+            "micro_description": "Metrics for optimization: Throughput, Turnaround, Waiting Time.",
+            "difficulty": "Medium",
+            "estimated_time": "25 min"
+        },
+        {
+            "id": "os_sched_04",
+            "title": "FCFS Algorithm",
+            "micro_description": "First-Come, First-Served logic and the Convoy Effect.",
+            "difficulty": "Easy",
+            "estimated_time": "20 min"
+        },
+        {
+            "id": "os_sched_05",
+            "title": "SJF & SRTF",
+            "micro_description": "Shortest Job First and its preemptive version.",
+            "difficulty": "Hard",
+            "estimated_time": "35 min"
+        },
+        {
+            "id": "os_sched_06",
+            "title": "Round Robin (RR)",
+            "micro_description": "Time quantum based detailed analysis.",
+            "difficulty": "Hard",
+            "estimated_time": "40 min"
+        },
+        {
+            "id": "os_sched_07",
+            "title": "Priority & Aging",
+            "micro_description": "Handling priority inversions and starvation.",
+            "difficulty": "Medium",
+            "estimated_time": "25 min"
+        }
+    ],
+    "dependencies": [
+        {
+            "source": "os_sched_01",
+            "target": "os_sched_02",
+            "type": "mandatory"
+        },
+        {
+            "source": "os_sched_02",
+            "target": "os_sched_03",
+            "type": "mandatory"
+        },
+        {
+            "source": "os_sched_03",
+            "target": "os_sched_04",
+            "type": "mandatory"
+        },
+        {
+            "source": "os_sched_04",
+            "target": "os_sched_05",
+            "type": "optional_branch"
+        },
+        {
+            "source": "os_sched_04",
+            "target": "os_sched_06",
+            "type": "mandatory_branch"
+        },
+        {
+            "source": "os_sched_04",
+            "target": "os_sched_07",
+            "type": "optional_branch"
+        }
+    ],
+    "learning_modes": {
+        "os_sched_01": {
+            "explanation": true,
+            "visualization": true,
+            "practice": false,
+            "quiz_gate": false
+        },
+        "os_sched_02": {
+            "explanation": true,
+            "visualization": false,
+            "practice": false,
+            "quiz_gate": true
+        },
+        "os_sched_03": {
+            "explanation": true,
+            "visualization": true,
+            "practice": true,
+            "quiz_gate": false
+        },
+        "os_sched_04": {
+            "explanation": true,
+            "visualization": true,
+            "practice": true,
+            "quiz_gate": true
+        },
+        "os_sched_05": {
+            "explanation": true,
+            "visualization": true,
+            "practice": true,
+            "quiz_gate": true
+        },
+        "os_sched_06": {
+            "explanation": true,
+            "visualization": true,
+            "practice": true,
+            "quiz_gate": true
+        },
+        "os_sched_07": {
+            "explanation": true,
+            "visualization": false,
+            "practice": true,
+            "quiz_gate": false
+        }
+    },
+    "quiz_strategy": {
+        "os_sched_02": {
+            "count": 3,
+            "types": [
+                "Conceptual"
+            ],
+            "pass_threshold": 0.7
+        },
+        "os_sched_04": {
+            "count": 5,
+            "types": [
+                "Numerical",
+                "Scenario"
+            ],
+            "pass_threshold": 0.8
+        },
+        "os_sched_05": {
+            "count": 5,
+            "types": [
+                "Numerical",
+                "Edge Cases"
+            ],
+            "pass_threshold": 0.8
+        },
+        "os_sched_06": {
+            "count": 5,
+            "types": [
+                "Numerical",
+                "Scenario"
+            ],
+            "pass_threshold": 0.85
+        }
+    },
+    "remedial_logic": {
+        "os_sched_04": {
+            "trigger_score": 0.6,
+            "revisit_node": "os_sched_03",
+            "action": "Review Gantt Charts"
+        },
+        "os_sched_06": {
+            "trigger_score": 0.5,
+            "revisit_node": "os_sched_02",
+            "action": "Review Context Switching Costs"
+        }
+    },
+    "visual_map_spec": {
+        "os_sched_01": {
+            "type": "Start",
+            "style": "Concept"
+        },
+        "os_sched_02": {
+            "type": "Concept",
+            "style": "Flowchart"
+        },
+        "os_sched_03": {
+            "type": "Concept",
+            "style": "Comparison Table"
+        },
+        "os_sched_04": {
+            "type": "Decision",
+            "style": "Gantt Chart"
+        },
+        "os_sched_05": {
+            "type": "Concept",
+            "style": "Gantt Chart"
+        },
+        "os_sched_06": {
+            "type": "Concept",
+            "style": "Timeline Ring"
+        },
+        "os_sched_07": {
+            "type": "Concept",
+            "style": "Tree"
+        }
+    }
+}

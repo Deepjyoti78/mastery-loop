@@ -1,0 +1,638 @@
+{
+    "content_package_id": "pkg_os_cpu_001",
+    "generated_at": "2026-01-29",
+    "topic": "Operating Systems > CPU Scheduling",
+    "target_audience": "Intermediate Learner",
+    "concepts": {
+        "os_sched_01": {
+            "id": "os_sched_01",
+            "title": "CPU-I/O Burst Cycle",
+            "content": {
+                "what_it_is": "The heartbeat of process execution. Processes alternate between two states: using the CPU (CPU burst) and waiting for I/O (I/O burst).",
+                "why_it_matters": "Knowing if a process is 'CPU-bound' (long bursts) or 'I/O-bound' (short bursts) dictates which scheduling algorithm works best.",
+                "visual_cue": "Think of a chef (CPU) chopping blocking vs. waiting for water to boil (I/O). You don't stare at the pot; you chop veggies while it heats."
+            },
+            "diagram_spec": {
+                "style": "Cycle Loop",
+                "nodes": [
+                    {
+                        "id": "d1_n1",
+                        "label": "Load Store Add",
+                        "type": "CPU Burst"
+                    },
+                    {
+                        "id": "d1_n2",
+                        "label": "Read from File",
+                        "type": "I/O Wait"
+                    }
+                ],
+                "edges": [
+                    {
+                        "from": "d1_n1",
+                        "to": "d1_n2",
+                        "label": "Request I/O"
+                    },
+                    {
+                        "from": "d1_n2",
+                        "to": "d1_n1",
+                        "label": "I/O Complete"
+                    }
+                ]
+            }
+        },
+        "os_sched_02": {
+            "id": "os_sched_02",
+            "title": "Dispatcher & Latency",
+            "content": {
+                "what_it_is": "The module that gives control of the CPU to the process selected by the short-term scheduler. It performs the actual context switch.",
+                "why_it_matters": "Switching isn't free. 'Dispatch latency' is wasted time where the CPU does no useful work. Minimizing this is critical for performance.",
+                "visual_cue": "Like a pit crew changing tires. The car (CPU) isn't racing while the crew (Dispatcher) is working. The faster the crew, the more race time available."
+            },
+            "diagram_spec": {
+                "style": "Timeline Block",
+                "nodes": [
+                    {
+                        "id": "d2_n1",
+                        "label": "Process P0 Running",
+                        "color": "blue"
+                    },
+                    {
+                        "id": "d2_n2",
+                        "label": "Dispatch Latency (Overhead)",
+                        "color": "red"
+                    },
+                    {
+                        "id": "d2_n3",
+                        "label": "Process P1 Running",
+                        "color": "green"
+                    }
+                ],
+                "edges": [
+                    {
+                        "from": "d2_n1",
+                        "to": "d2_n2",
+                        "label": "Interrupt"
+                    },
+                    {
+                        "from": "d2_n2",
+                        "to": "d2_n3",
+                        "label": "Switch Complete"
+                    }
+                ]
+            },
+            "quiz": [
+                {
+                    "question": "Which component is responsible for the actual context switch?",
+                    "options": [
+                        "Short-term Scheduler",
+                        "Dispatcher",
+                        "Long-term Scheduler",
+                        "Interrupt Handler"
+                    ],
+                    "correct_answer": "Dispatcher",
+                    "why_correct": "The scheduler strictly *selects* the next process. The *Dispatcher* performs the mechanical save/restore of registers and mode switching.",
+                    "why_others_wrong": [
+                        "Scheduler only decides 'who's next'.",
+                        "Interrupt handler triggers the event but Dispatcher handles the process switch logic."
+                    ]
+                },
+                {
+                    "question": "What happens to the CPU during 'dispatch latency'?",
+                    "options": [
+                        "It computes user data faster",
+                        "It sits idle",
+                        "It executes OS overhead code",
+                        "It executes the next process"
+                    ],
+                    "correct_answer": "It executes OS overhead code",
+                    "why_correct": "The CPU is busy saving/loading context. It's not 'idle' (off), but it's not doing 'useful' user work either.",
+                    "why_others_wrong": [
+                        "No user data is processed.",
+                        "It is actively executing kernel instructions.",
+                        "Next process starts strictly *after* latency."
+                    ]
+                },
+                {
+                    "question": "If dispatch latency is high, which metric suffers most directly?",
+                    "options": [
+                        "Disk Throughput",
+                        "CPU Utilization (User)",
+                        "Memory Usage",
+                        "File System Integrity"
+                    ],
+                    "correct_answer": "CPU Utilization (User)",
+                    "why_correct": "Time spent dispatching is time subtracted from user tasks. High latency = Lower percentage of time doing actual work.",
+                    "why_others_wrong": [
+                        "Disk/Memory are separate bottlenecks.",
+                        "Integrity is unrelated to timing overhead."
+                    ]
+                }
+            ]
+        },
+        "os_sched_03": {
+            "id": "os_sched_03",
+            "title": "Scheduling Criteria",
+            "content": {
+                "what_it_is": "The yardsticks we use to judge algorithms. Throughput (jobs/sec), Turnaround (total time), Waiting (time in ready queue), and Response (time to first output).",
+                "why_it_matters": "You can't optimize everything. Maximizing throughput might hurt response time. You must pick the right metric for the right system (e.g., Interactive vs. Batch).",
+                "visual_cue": "Like airport security lines. Throughput = how many people pass per hour. Waiting time = how long you stand in line. Response time = how long until you first put your bag on the belt."
+            },
+            "diagram_spec": {
+                "style": "Comparison Table",
+                "nodes": [
+                    {
+                        "id": "d3_n1",
+                        "label": "Throughput",
+                        "desc": "Maximize (Batch Systems)"
+                    },
+                    {
+                        "id": "d3_n2",
+                        "label": "Response Time",
+                        "desc": "Minimize (Interactive PC)"
+                    },
+                    {
+                        "id": "d3_n3",
+                        "label": "Turnaround Time",
+                        "desc": "Minimize (Completion Time)"
+                    }
+                ],
+                "edges": []
+            }
+        },
+        "os_sched_04": {
+            "id": "os_sched_04",
+            "title": "FCFS Algorithm",
+            "content": {
+                "what_it_is": "First-Come, First-Served. The simplest non-preemptive algo. The process that arrives first gets the CPU until it's done.",
+                "why_it_matters": "Easy to write, but suffers from the 'Convoy Effect'—one slow CPU-bound process can block everyone else, tanking interactivity.",
+                "visual_cue": "A grocery store with only one checkout lane. If the person in front has a full cart (CPU bound), everyone with just milk (I/O bound) waits effectively forever."
+            },
+            "diagram_spec": {
+                "style": "Gantt Chart",
+                "nodes": [
+                    {
+                        "id": "d4_p1",
+                        "label": "P1 (24ms)",
+                        "start": 0,
+                        "end": 24,
+                        "color": "blue"
+                    },
+                    {
+                        "id": "d4_p2",
+                        "label": "P2 (3ms)",
+                        "start": 24,
+                        "end": 27,
+                        "color": "green"
+                    },
+                    {
+                        "id": "d4_p3",
+                        "label": "P3 (3ms)",
+                        "start": 27,
+                        "end": 30,
+                        "color": "orange"
+                    }
+                ],
+                "edges": []
+            },
+            "quiz": [
+                {
+                    "question": "In FCFS, if P1 (20ms) arrives before P2 (2ms), what is the waiting time for P2?",
+                    "options": [
+                        "0ms",
+                        "2ms",
+                        "20ms",
+                        "18ms"
+                    ],
+                    "correct_answer": "20ms",
+                    "why_correct": "P2 must wait for the entire duration of P1. Since P1 starts at 0 and ends at 20, P2 waits 20ms.",
+                    "why_others_wrong": [
+                        "P1 waits 0ms.",
+                        "2ms is P2's burst duration."
+                    ]
+                },
+                {
+                    "question": "What is the 'Convoy Effect'?",
+                    "options": [
+                        "Fast processes blocking slow ones",
+                        "Short processes stuck behind a long process",
+                        "CPU idling too much",
+                        "Deadlock creation"
+                    ],
+                    "correct_answer": "Short processes stuck behind a long process",
+                    "why_correct": "Like a convoy of fast cars stuck behind a slow truck. Small I/O jobs wait for one big CPU job, lowering I/O utilization.",
+                    "why_others_wrong": [
+                        "It's the opposite: Slow blocks Fast.",
+                        "Not related to deadlocks."
+                    ]
+                },
+                {
+                    "question": "Is FCFS Preemptive or Non-Preemptive?",
+                    "options": [
+                        "Preemptive",
+                        "Non-Preemptive",
+                        "Both",
+                        "Neither"
+                    ],
+                    "correct_answer": "Non-Preemptive",
+                    "why_correct": "Once a process gets the CPU, it keeps it until it terminates or blocks for I/O. No interruptions allowed.",
+                    "why_others_wrong": [
+                        "Preemptive would mean the OS can forcibly stop it."
+                    ]
+                },
+                {
+                    "question": "Which metric performs worst in FCFS when burst times vary largely?",
+                    "options": [
+                        "Average Waiting Time",
+                        "CPU Volatility",
+                        "Interrupt count",
+                        "Context Switch overhead"
+                    ],
+                    "correct_answer": "Average Waiting Time",
+                    "why_correct": "If a long job arrives first, average wait time skyrockets compared to SJF.",
+                    "why_others_wrong": [
+                        "FCFS has low volatility and low context switch overhead."
+                    ]
+                },
+                {
+                    "question": "Why is FCFS rarely used in modern Desktops?",
+                    "options": [
+                        "Too complex to code",
+                        "Poor Response Time",
+                        "High memory usage",
+                        "Requires GPU support"
+                    ],
+                    "correct_answer": "Poor Response Time",
+                    "why_correct": "Interactive systems need snappy response (clicking a button). FCFS could make you wait seconds for a click to register.",
+                    "why_others_wrong": [
+                        "It's actually the simplest algorithm.",
+                        "Memory usage is minimal."
+                    ]
+                }
+            ]
+        },
+        "os_sched_05": {
+            "id": "os_sched_05",
+            "title": "SJF & SRTF",
+            "content": {
+                "what_it_is": "Shortest Job First. It selects the process with the smallest next CPU burst. SRTF is the preemptive version (Shortest Remaining Time First).",
+                "why_it_matters": "It is mathematically proven to give the minimum *average* waiting time. However, it's impossible to implement perfectly because we can't predict the future.",
+                "visual_cue": "A specialized 'Express Lane' at the store that is mandatory for small items. Large carts are strictly forbidden until small ones are done."
+            },
+            "diagram_spec": {
+                "style": "Gantt Chart",
+                "nodes": [
+                    {
+                        "id": "d5_p4",
+                        "label": "P4 (3ms)",
+                        "start": 0,
+                        "end": 3
+                    },
+                    {
+                        "id": "d5_p1",
+                        "label": "P1 (6ms)",
+                        "start": 3,
+                        "end": 9
+                    },
+                    {
+                        "id": "d5_p3",
+                        "label": "P3 (7ms)",
+                        "start": 9,
+                        "end": 16
+                    },
+                    {
+                        "id": "d5_p2",
+                        "label": "P2 (8ms)",
+                        "start": 16,
+                        "end": 24
+                    }
+                ],
+                "edges": []
+            },
+            "quiz": [
+                {
+                    "question": "What is the key advantage of SJF?",
+                    "options": [
+                        "Fairness to all",
+                        "Minimum Average Waiting Time",
+                        "No Starvation",
+                        "Predictability"
+                    ],
+                    "correct_answer": "Minimum Average Waiting Time",
+                    "why_correct": "Moving short tasks to the front clears the queue faster, reducing the aggregate wait time for the group.",
+                    "why_others_wrong": [
+                        "It is unfair to long processes (Starvation).",
+                        "Prediction is its main weakness."
+                    ]
+                },
+                {
+                    "question": "What happens to long processes in a busy SJF system?",
+                    "options": [
+                        "They execute instantly",
+                        "Starvation",
+                        "They get higher priority",
+                        "They are moved to I/O"
+                    ],
+                    "correct_answer": "Starvation",
+                    "why_correct": "If short processes keep arriving, the long process may never get selected. This is called Starvation.",
+                    "why_others_wrong": [
+                        "They definitely don't run instantly."
+                    ]
+                },
+                {
+                    "question": "What is the Preemptive version of SJF called?",
+                    "options": [
+                        "LJF",
+                        "SRTF",
+                        "Round Robin",
+                        "Priority Scheduling"
+                    ],
+                    "correct_answer": "SRTF",
+                    "why_correct": "Shortest Remaining Time First. If a new job arrives with a burst shorter than what's left of the current job, it preempts.",
+                    "why_others_wrong": [
+                        "LJF is Longest Job First.",
+                        "RR is time-based."
+                    ]
+                },
+                {
+                    "question": "How do we implement SJF in reality if we don't know burst times?",
+                    "options": [
+                        "We guess randomly",
+                        "Exponential Averaging",
+                        "Ask the user",
+                        "Always assume 10ms"
+                    ],
+                    "correct_answer": "Exponential Averaging",
+                    "why_correct": "We predict the next burst based on the weighted average of previous bursts.",
+                    "why_others_wrong": [
+                        "Random guessing implies poor performance.",
+                        "User input is unreliable."
+                    ]
+                },
+                {
+                    "question": "In SRTF, Process A has 5ms left, Process B arrives with 2ms. What happens?",
+                    "options": [
+                        "A continues",
+                        "Context Switch to B",
+                        "Both run in parallel",
+                        "System crashes"
+                    ],
+                    "correct_answer": "Context Switch to B",
+                    "why_correct": "2ms < 5ms. The scheduler sees B can finish faster, so it preempts A to run B.",
+                    "why_others_wrong": [
+                        "A would continue only in non-preemptive SJF."
+                    ]
+                }
+            ]
+        },
+        "os_sched_06": {
+            "id": "os_sched_06",
+            "title": "Round Robin (RR)",
+            "content": {
+                "what_it_is": "The fairness king. Each process gets a small unit of CPU time (Time Quantum), usually 10-100ms. If it doesn't finish, it goes to the back of the line.",
+                "why_it_matters": "The standard for timesharing systems. No one waits too long. But if the Quantum is too large, it becomes FCFS. Too small, and overhead kills performance.",
+                "visual_cue": "A game of musical chairs where everyone sits for exactly 10 seconds before being forced to get up and move to the next chair."
+            },
+            "diagram_spec": {
+                "style": "Cycle Loop",
+                "nodes": [
+                    {
+                        "id": "d6_q",
+                        "label": "Ready Queue",
+                        "type": "Container"
+                    },
+                    {
+                        "id": "d6_cpu",
+                        "label": "CPU Execution",
+                        "type": "Active"
+                    },
+                    {
+                        "id": "d6_int",
+                        "label": "Timer Interrupt",
+                        "type": "Event"
+                    }
+                ],
+                "edges": [
+                    {
+                        "from": "d6_q",
+                        "to": "d6_cpu",
+                        "label": "Dispatch"
+                    },
+                    {
+                        "from": "d6_cpu",
+                        "to": "d6_q",
+                        "label": "Quantum Expired"
+                    }
+                ]
+            },
+            "quiz": [
+                {
+                    "question": "If the Time Quantum is infinitely large, what does RR become?",
+                    "options": [
+                        "SJF",
+                        "FCFS",
+                        "Priority",
+                        "LJF"
+                    ],
+                    "correct_answer": "FCFS",
+                    "why_correct": "If the timer never expires, the process runs until completion. That's exactly First-Come, First-Served.",
+                    "why_others_wrong": [
+                        "SJF requires sorting by size.",
+                        "Priority requires rank."
+                    ]
+                },
+                {
+                    "question": "What is the main drawback of a very small Quantum (e.g., 1ms)?",
+                    "options": [
+                        "High Dispatch Latency overhead",
+                        "Starvation",
+                        "Low Response Time",
+                        "Complexity"
+                    ],
+                    "correct_answer": "High Dispatch Latency overhead",
+                    "why_correct": "If context switching takes 0.1ms and quantum is 1ms, you spend 10% of CPU time just switching. Inefficient.",
+                    "why_others_wrong": [
+                        "RR prevents starvation.",
+                        "Response time is actually good, but throughput suffers."
+                    ]
+                },
+                {
+                    "question": "Round Robin is best suited for which environment?",
+                    "options": [
+                        "Batch Processing",
+                        "Real-Time Systems",
+                        "Time-Sharing / Interactive",
+                        "Database Servers"
+                    ],
+                    "correct_answer": "Time-Sharing / Interactive",
+                    "why_correct": "It guarantees every user gets a slice of time quickly, keeping the system responsive.",
+                    "why_others_wrong": [
+                        "Batch prefers throughput (FCFS/SJF).",
+                        "Real-time needs strict deadlines."
+                    ]
+                },
+                {
+                    "question": "Does Round Robin suffer from the Convoy Effect?",
+                    "options": [
+                        "Yes, severely",
+                        "No, it eliminates it",
+                        "Only with large quotas",
+                        "Only on single core"
+                    ],
+                    "correct_answer": "No, it eliminates it",
+                    "why_correct": "Since long jobs are forcibly interrupted, they cannot block short jobs for long. Convoy effect is negated.",
+                    "why_others_wrong": [
+                        "It was designed specifically to fix convoys."
+                    ]
+                },
+                {
+                    "question": "A process needs 8ms. Quantum is 5ms. How many context switches occur?",
+                    "options": [
+                        "0",
+                        "1",
+                        "2",
+                        "3"
+                    ],
+                    "correct_answer": "1",
+                    "why_correct": "Run 0-5ms (Switch 1). Run 5-8ms (Finish). Total 1 switch (at 5ms). *Excluding initial dispatch.*",
+                    "why_others_wrong": [
+                        "0 implies it finished in one go."
+                    ]
+                }
+            ]
+        },
+        "os_sched_07": {
+            "id": "os_sched_07",
+            "title": "Priority & Aging",
+            "content": {
+                "what_it_is": "Assign a number (rank) to each process. CPU goes to the highest rank. Can be preemptive or non-preemptive.",
+                "why_it_matters": "Essential for OS kernels (system processes > user processes). The danger is 'Starvation'—low priority jobs may NEVER run. The fix is 'Aging': gradually increase priority of waiting jobs.",
+                "visual_cue": "VIP club entry. VIPs (high priority) skip the line. If a regular person waits too long, the bouncer eventually upgrades them to VIP (Aging)."
+            },
+            "diagram_spec": {
+                "style": "Tree",
+                "nodes": [
+                    {
+                        "id": "d7_n1",
+                        "label": "Processes",
+                        "type": "Root"
+                    },
+                    {
+                        "id": "d7_n2",
+                        "label": "Static Priority",
+                        "type": "Branch"
+                    },
+                    {
+                        "id": "d7_n3",
+                        "label": "Dynamic Priority",
+                        "type": "Branch"
+                    }
+                ],
+                "edges": []
+            }
+        }
+    },
+    "visual_flow_logic": {
+        "nodes": [
+            {
+                "id": "os_sched_01",
+                "type": "concept",
+                "x": 100,
+                "y": 300,
+                "unlocked_by": []
+            },
+            {
+                "id": "os_sched_02",
+                "type": "concept",
+                "x": 300,
+                "y": 300,
+                "unlocked_by": [
+                    "os_sched_01"
+                ]
+            },
+            {
+                "id": "os_sched_03",
+                "type": "concept",
+                "x": 500,
+                "y": 300,
+                "unlocked_by": [
+                    "os_sched_02"
+                ]
+            },
+            {
+                "id": "os_sched_04",
+                "type": "concept",
+                "x": 700,
+                "y": 300,
+                "unlocked_by": [
+                    "os_sched_03"
+                ]
+            },
+            {
+                "id": "os_sched_05",
+                "type": "branch",
+                "x": 900,
+                "y": 150,
+                "unlocked_by": [
+                    "os_sched_04"
+                ]
+            },
+            {
+                "id": "os_sched_06",
+                "type": "branch",
+                "x": 900,
+                "y": 300,
+                "unlocked_by": [
+                    "os_sched_04"
+                ]
+            },
+            {
+                "id": "os_sched_07",
+                "type": "branch",
+                "x": 900,
+                "y": 450,
+                "unlocked_by": [
+                    "os_sched_04"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "source": "os_sched_01",
+                "target": "os_sched_02"
+            },
+            {
+                "source": "os_sched_02",
+                "target": "os_sched_03"
+            },
+            {
+                "source": "os_sched_03",
+                "target": "os_sched_04"
+            },
+            {
+                "source": "os_sched_04",
+                "target": "os_sched_05",
+                "label": "Optimization"
+            },
+            {
+                "source": "os_sched_04",
+                "target": "os_sched_06",
+                "label": "Fairness"
+            },
+            {
+                "source": "os_sched_04",
+                "target": "os_sched_07",
+                "label": "Control"
+            }
+        ]
+    },
+    "remedial_strategies": {
+        "os_sched_04": {
+            "refresher_content": "Remember: FCFS is just a FIFO queue. Draw a timeline. Put the first arrival at 0. Add its burst length. That's the start time for the next one.",
+            "visual_link": "os_sched_03"
+        },
+        "os_sched_06": {
+            "refresher_content": "The key to RR is the Quantum. If Quantum=4, simply slice every job of 10ms into 4, 4, and 2. They take turns.",
+            "visual_link": "os_sched_02"
+        }
+    }
+}

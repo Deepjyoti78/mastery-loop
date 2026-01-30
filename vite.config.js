@@ -8,4 +8,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/n8n-api': {
+        target: 'https://dikshantdas.app.n8n.cloud',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/n8n-api/, '/webhook-test/ai/learning'),
+      },
+    },
+  },
 })

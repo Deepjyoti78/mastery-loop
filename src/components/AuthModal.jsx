@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft, X } from 'lucide-react';
 
 const AuthModal = ({ isOpen, onClose, defaultMode = 'signup', onAuthenticated }) => {
+    const navigate = useNavigate();
     const [mode, setMode] = useState(defaultMode); // 'signup' or 'login'
     const [showPassword, setShowPassword] = useState(false);
 
@@ -29,6 +31,10 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signup', onAuthenticated })
         e.preventDefault();
         // Simulate auth
         setTimeout(() => {
+            // Priority: Navigate first if signup
+            if (mode === 'signup') {
+                navigate('/setup');
+            }
             onAuthenticated({ name: formData.firstName || 'User', email: formData.email });
             onClose();
         }, 800);

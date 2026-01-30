@@ -12,6 +12,66 @@ import RightSidebar from '../components/RightSidebar';
 const TodayFocusPage = () => {
     const navigate = useNavigate();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [currentUser, setCurrentUser] = useState({ name: 'Guest User', role: 'Student Plan' });
+
+    React.useEffect(() => {
+        const userData = localStorage.getItem('mastery_user_data');
+        if (userData) {
+            const parsed = JSON.parse(userData);
+            setCurrentUser({ name: parsed.name, role: parsed.email || 'Student Plan' });
+        }
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('mastery_auth');
+        window.location.href = '/';
+    };
+    const [focusTopic, setFocusTopic] = useState({
+        subject: 'Operating Systems',
+        title: 'CPU Scheduling: Round Robin',
+        time: '45 min estimated',
+        insight: 'Weakness detected in Preemptive Scheduling',
+        goal: 'Mastering Round Robin unlocks Deadlock Prevention'
+    });
+
+    React.useEffect(() => {
+        const savedSubject = localStorage.getItem('mastery_subject');
+        if (savedSubject) {
+            const mapping = {
+                'Operating Systems': {
+                    subject: 'Operating Systems',
+                    title: 'CPU Scheduling: Round Robin',
+                    time: '45 min estimated',
+                    insight: 'Weakness detected in Preemptive Scheduling.',
+                    goal: 'Mastering Round Robin unlocks Deadlock Prevention.'
+                },
+                'Data Structures': {
+                    subject: 'Data Structures',
+                    title: 'Linked Lists: Pointer Reversal',
+                    time: '60 min estimated',
+                    insight: 'Gap detected in Pointer Manipulation.',
+                    goal: 'Essential for Graph Algorithms and Trees.'
+                },
+                'DBMS': {
+                    subject: 'DBMS',
+                    title: 'Normalization: 3rd Normal Form',
+                    time: '30 min estimated',
+                    insight: 'Redundancy issues found in recent schema design.',
+                    goal: 'Required for optimized Database Design.'
+                },
+                'Computer Networks': {
+                    subject: 'Computer Networks',
+                    title: 'TCP/IP: Three-Way Handshake',
+                    time: '50 min estimated',
+                    insight: 'Connection establishment concepts weak.',
+                    goal: 'Foundation for understanding HTTP/HTTPS.'
+                }
+            };
+            if (mapping[savedSubject]) {
+                setFocusTopic(mapping[savedSubject]);
+            }
+        }
+    }, []);
 
     const NavItem = ({ icon: Icon, label, active, onClick }) => (
         <button
@@ -81,7 +141,7 @@ const TodayFocusPage = () => {
                         {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">Tools</div>}
                         <nav className="space-y-0.5">
                             <NavItem icon={Settings} label="Search" />
-                            <NavItem icon={LogOut} label="Log out" />
+                            <NavItem icon={LogOut} label="Log out" onClick={handleLogout} />
                         </nav>
                     </section>
                 </div>
@@ -90,8 +150,8 @@ const TodayFocusPage = () => {
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-inner shrink-0" />
                         {!isSidebarCollapsed && (
                             <div className="overflow-hidden">
-                                <div className="text-sm font-bold text-white whitespace-nowrap">Guest User</div>
-                                <div className="text-[10px] text-gray-400 font-medium whitespace-nowrap">Student Plan</div>
+                                <div className="text-sm font-bold text-white whitespace-nowrap">{currentUser.name}</div>
+                                <div className="text-[10px] text-gray-400 font-medium whitespace-nowrap">{currentUser.role}</div>
                             </div>
                         )}
                     </div>
@@ -147,12 +207,12 @@ const TodayFocusPage = () => {
                                     <span className="text-[10px] font-bold text-slate-500">Step 1 of 4</span>
                                 </div>
                                 <h2 className="text-2xl md:text-3xl font-extrabold text-[#1F1F1F] leading-tight mb-2">
-                                    CPU Scheduling: Round Robin
+                                    {focusTopic.title}
                                 </h2>
                                 <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
                                     <div className="flex items-center gap-1.5">
                                         <Layers className="w-3.5 h-3.5" />
-                                        Operating Systems
+                                        {focusTopic.subject}
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <Target className="w-3.5 h-3.5" />
@@ -160,7 +220,7 @@ const TodayFocusPage = () => {
                                     </div>
                                     <div className="flex items-center gap-1.5 text-slate-700">
                                         <Clock className="w-3.5 h-3.5" />
-                                        45 min estimated
+                                        {focusTopic.time}
                                     </div>
                                 </div>
                             </div>
@@ -240,7 +300,7 @@ const TodayFocusPage = () => {
                                                 <span className="text-xs font-bold text-amber-700 uppercase">Detection</span>
                                             </div>
                                             <p className="text-xs text-amber-900 leading-relaxed font-medium">
-                                                Weakness detected in <strong>Preemptive Scheduling</strong> based on yesterday's quiz performance (65%).
+                                                {focusTopic.insight}
                                             </p>
                                         </div>
 
@@ -250,7 +310,7 @@ const TodayFocusPage = () => {
                                                 <span className="text-xs font-bold text-indigo-700 uppercase">Strategic Goal</span>
                                             </div>
                                             <p className="text-xs text-indigo-900 leading-relaxed font-medium">
-                                                Mastering Round Robin unlocks the <strong>Deadlock Prevention</strong> module.
+                                                {focusTopic.goal}
                                             </p>
                                         </div>
                                     </div>

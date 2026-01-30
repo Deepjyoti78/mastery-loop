@@ -1,0 +1,366 @@
+{
+    "subject": "Data Structures",
+    "topic": "Arrays",
+    "level": "Beginner",
+    "rootNode": {
+        "id": "arr_root",
+        "title": "Arrays Foundation",
+        "type": "core",
+        "difficulty": "easy",
+        "estimatedTime": 5
+    },
+    "nodes": [
+        {
+            "id": "arr_root",
+            "title": "What is an Array?",
+            "type": "core",
+            "difficulty": "easy",
+            "estimatedTime": 5
+        },
+        {
+            "id": "arr_memory",
+            "title": "Memory Layout",
+            "type": "concept",
+            "difficulty": "easy",
+            "estimatedTime": 8
+        },
+        {
+            "id": "arr_indexing",
+            "title": "Indexing & Access",
+            "type": "concept",
+            "difficulty": "easy",
+            "estimatedTime": 6
+        },
+        {
+            "id": "arr_operations",
+            "title": "Basic Operations",
+            "type": "concept",
+            "difficulty": "medium",
+            "estimatedTime": 10
+        },
+        {
+            "id": "arr_traversal",
+            "title": "Array Traversal",
+            "type": "concept",
+            "difficulty": "easy",
+            "estimatedTime": 7
+        },
+        {
+            "id": "arr_complexity",
+            "title": "Time Complexity",
+            "type": "concept",
+            "difficulty": "medium",
+            "estimatedTime": 12
+        },
+        {
+            "id": "arr_2d",
+            "title": "2D Arrays",
+            "type": "concept",
+            "difficulty": "medium",
+            "estimatedTime": 15
+        },
+        {
+            "id": "arr_remedial_pointers",
+            "title": "Pointers Basics",
+            "type": "remedial",
+            "difficulty": "easy",
+            "estimatedTime": 10
+        },
+        {
+            "id": "arr_quiz_basics",
+            "title": "Arrays Checkpoint",
+            "type": "quiz",
+            "difficulty": "easy",
+            "estimatedTime": 5
+        },
+        {
+            "id": "arr_quiz_advanced",
+            "title": "Operations Test",
+            "type": "quiz",
+            "difficulty": "medium",
+            "estimatedTime": 8
+        }
+    ],
+    "edges": [
+        {
+            "from": "arr_root",
+            "to": "arr_memory",
+            "type": "unlocks"
+        },
+        {
+            "from": "arr_memory",
+            "to": "arr_indexing",
+            "type": "unlocks"
+        },
+        {
+            "from": "arr_indexing",
+            "to": "arr_traversal",
+            "type": "unlocks"
+        },
+        {
+            "from": "arr_indexing",
+            "to": "arr_quiz_basics",
+            "type": "checkpoint"
+        },
+        {
+            "from": "arr_quiz_basics",
+            "to": "arr_operations",
+            "type": "unlocks"
+        },
+        {
+            "from": "arr_operations",
+            "to": "arr_complexity",
+            "type": "unlocks"
+        },
+        {
+            "from": "arr_complexity",
+            "to": "arr_2d",
+            "type": "unlocks"
+        },
+        {
+            "from": "arr_2d",
+            "to": "arr_quiz_advanced",
+            "type": "checkpoint"
+        },
+        {
+            "from": "arr_quiz_basics",
+            "to": "arr_remedial_pointers",
+            "type": "fallback"
+        }
+    ],
+    "expandables": {
+        "arr_root": {
+            "definition": "A contiguous block of memory storing elements of the same type. Think of it as numbered boxes in a row.",
+            "keyPoints": [
+                "Fixed size (in most languages)",
+                "Same data type for all elements",
+                "Stored in contiguous memory",
+                "0-indexed in most languages"
+            ],
+            "commonMistakes": [
+                "Confusing index with position (0 vs 1-based)",
+                "Array out of bounds errors",
+                "Assuming arrays are dynamic"
+            ]
+        },
+        "arr_memory": {
+            "definition": "Arrays occupy consecutive memory addresses. Element at index i is base_address + (i × element_size).",
+            "keyPoints": [
+                "Elements stored back-to-back",
+                "Base address + offset calculation",
+                "Cache-friendly due to locality",
+                "No gaps between elements"
+            ],
+            "commonMistakes": [
+                "Thinking arrays can grow in place",
+                "Ignoring memory alignment"
+            ]
+        },
+        "arr_indexing": {
+            "definition": "Access any element directly using its index in O(1) time. Index = position - 1 (for 0-based).",
+            "keyPoints": [
+                "Direct access via index",
+                "O(1) time complexity",
+                "Index range: 0 to (n-1)",
+                "Negative indices invalid (in most languages)"
+            ],
+            "commonMistakes": [
+                "Off-by-one errors",
+                "Using length as valid index",
+                "Not validating index bounds"
+            ]
+        },
+        "arr_operations": {
+            "definition": "Insert, delete, update, and search operations on arrays. Each has different time complexity.",
+            "keyPoints": [
+                "Update: O(1) - direct access",
+                "Insert at end: O(1) if space available",
+                "Insert at middle: O(n) - shift required",
+                "Delete: O(n) - shift elements left"
+            ],
+            "commonMistakes": [
+                "Forgetting to shift elements",
+                "Not handling size changes",
+                "Leaving gaps after deletion"
+            ]
+        },
+        "arr_traversal": {
+            "definition": "Visiting each element sequentially. Essential for searching unsorted arrays.",
+            "keyPoints": [
+                "Linear scan: O(n)",
+                "Use loops (for/while)",
+                "Process each element once",
+                "Common in algorithms"
+            ]
+        },
+        "arr_complexity": {
+            "definition": "Time taken for array operations. Access is fast (O(1)), but insertion/deletion can be slow (O(n)).",
+            "keyPoints": [
+                "Access/Update: O(1)",
+                "Search (unsorted): O(n)",
+                "Insert/Delete (worst): O(n)",
+                "Space: O(n)"
+            ]
+        },
+        "arr_2d": {
+            "definition": "Array of arrays. Visualize as a matrix with rows and columns.",
+            "keyPoints": [
+                "Accessed via arr[row][col]",
+                "Row-major vs column-major order",
+                "Useful for grids, matrices",
+                "Memory still contiguous (row-major)"
+            ],
+            "commonMistakes": [
+                "Confusing row/column order",
+                "Improper nested loop bounds",
+                "Not initializing inner arrays"
+            ]
+        },
+        "arr_remedial_pointers": {
+            "definition": "Pointers store memory addresses. Arrays and pointers are closely related in C/C++.",
+            "keyPoints": [
+                "Array name is a pointer to first element",
+                "Pointer arithmetic: ptr + 1 moves by element_size",
+                "arr[i] equivalent to *(arr + i)",
+                "Useful for dynamic arrays"
+            ]
+        }
+    },
+    "examples": [
+        {
+            "nodeId": "arr_root",
+            "title": "Declaring an Array",
+            "code": "int numbers[5] = {10, 20, 30, 40, 50};",
+            "language": "c",
+            "explanation": "Creates an array of 5 integers. Index 0 holds 10, index 4 holds 50."
+        },
+        {
+            "nodeId": "arr_indexing",
+            "title": "Accessing Elements",
+            "code": "int arr[3] = {5, 10, 15};\nint x = arr[1];  // x = 10\narr[2] = 99;     // arr is now {5, 10, 99}",
+            "language": "c",
+            "explanation": "Access element at index 1 (second element). Update element at index 2."
+        },
+        {
+            "nodeId": "arr_traversal",
+            "title": "Loop Through Array",
+            "code": "int arr[4] = {2, 4, 6, 8};\nfor(int i = 0; i < 4; i++) {\n    printf(\"%d \", arr[i]);\n}",
+            "language": "c",
+            "explanation": "Prints: 2 4 6 8. Loop from index 0 to 3."
+        },
+        {
+            "nodeId": "arr_operations",
+            "title": "Insert at Index",
+            "code": "// Insert 25 at index 2 in [10, 20, 30, 40]\n// Step 1: Shift elements right\narr[4] = arr[3];  // 40 moves to index 4\narr[3] = arr[2];  // 30 moves to index 3\n// Step 2: Insert\narr[2] = 25;\n// Result: [10, 20, 25, 30, 40]",
+            "language": "c",
+            "explanation": "Insertion requires shifting elements to make space. O(n) operation."
+        },
+        {
+            "nodeId": "arr_2d",
+            "title": "2D Array Example",
+            "code": "int matrix[2][3] = {\n    {1, 2, 3},\n    {4, 5, 6}\n};\nint val = matrix[1][2];  // val = 6",
+            "language": "c",
+            "explanation": "2x3 matrix. matrix[1][2] accesses row 1, column 2 (value 6)."
+        },
+        {
+            "nodeId": "arr_memory",
+            "title": "Memory Address Calculation",
+            "code": "// If base address = 1000, int size = 4 bytes\n// arr[0] at 1000\n// arr[1] at 1000 + (1*4) = 1004\n// arr[2] at 1000 + (2*4) = 1008",
+            "language": "pseudo",
+            "explanation": "Each element is offset by (index × size) from the base address."
+        }
+    ],
+    "quiz": [
+        {
+            "nodeId": "arr_quiz_basics",
+            "question": "What is the index of the last element in an array of size 10?",
+            "options": [
+                "10",
+                "9",
+                "0",
+                "11"
+            ],
+            "correctAnswer": "9",
+            "explanation": "Arrays are 0-indexed. Last index = size - 1 = 10 - 1 = 9.",
+            "difficulty": "easy"
+        },
+        {
+            "nodeId": "arr_quiz_basics",
+            "question": "What happens if you access arr[10] in an array of size 10?",
+            "options": [
+                "Returns the last element",
+                "Returns 0",
+                "Undefined behavior / Error",
+                "Automatically resizes array"
+            ],
+            "correctAnswer": "Undefined behavior / Error",
+            "explanation": "Valid indices are 0-9. Accessing arr[10] is out of bounds, causing undefined behavior or runtime error.",
+            "difficulty": "easy"
+        },
+        {
+            "nodeId": "arr_quiz_basics",
+            "question": "How is memory allocated for int arr[5]?",
+            "options": [
+                "5 separate memory blocks",
+                "One contiguous block",
+                "Linked nodes",
+                "Randomly scattered"
+            ],
+            "correctAnswer": "One contiguous block",
+            "explanation": "Arrays occupy consecutive memory locations. All 5 integers are stored back-to-back.",
+            "difficulty": "easy"
+        },
+        {
+            "nodeId": "arr_quiz_advanced",
+            "question": "What is the time complexity of accessing arr[50] in an array of 1000 elements?",
+            "options": [
+                "O(1)",
+                "O(n)",
+                "O(log n)",
+                "O(50)"
+            ],
+            "correctAnswer": "O(1)",
+            "explanation": "Array access is constant time because the address is calculated directly: base + (50 × element_size).",
+            "difficulty": "medium"
+        },
+        {
+            "nodeId": "arr_quiz_advanced",
+            "question": "Inserting an element at the beginning of an array of size n has time complexity of:",
+            "options": [
+                "O(1)",
+                "O(n)",
+                "O(log n)",
+                "O(n²)"
+            ],
+            "correctAnswer": "O(n)",
+            "explanation": "All n elements must be shifted one position to the right to make space at index 0.",
+            "difficulty": "medium"
+        },
+        {
+            "nodeId": "arr_quiz_advanced",
+            "question": "In a 2D array arr[3][4], how many total elements are there?",
+            "options": [
+                "7",
+                "12",
+                "3",
+                "4"
+            ],
+            "correctAnswer": "12",
+            "explanation": "3 rows × 4 columns = 12 elements total.",
+            "difficulty": "medium"
+        },
+        {
+            "nodeId": "arr_quiz_advanced",
+            "question": "Which operation is FASTEST on an array?",
+            "options": [
+                "Insert at beginning",
+                "Delete from middle",
+                "Access by index",
+                "Search for a value"
+            ],
+            "correctAnswer": "Access by index",
+            "explanation": "Direct access is O(1). All other operations require shifting or scanning, making them O(n).",
+            "difficulty": "medium"
+        }
+    ]
+}

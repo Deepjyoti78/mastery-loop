@@ -1,23 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RightSidebar from '../components/RightSidebar';
 import {
     LayoutGrid, Calendar, Users, BarChart2, BookOpen,
     Settings, LogOut, Search, Bell, ChevronRight,
-    Trophy, Briefcase, Zap, CheckCircle, AlertTriangle, XCircle, ArrowRight,
-    Target, Network, Server, Globe, PenTool, ChevronLeft
+    Trophy, Briefcase, ChevronLeft, Upload, CheckCircle2,
+    AlertCircle, Target, ArrowRight, ShieldAlert,
+    FileText, Zap, ChevronDown, Rocket, Sliders,
+    TrendingUp, Activity, Lock, RefreshCw, Star
 } from 'lucide-react';
+import { generateCareerProfile } from '../services/aiService';
+import { extractTextFromPDF } from '../utils/resumeParser';
 
 const CareerPage = () => {
     const navigate = useNavigate();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [setupStep, setSetupStep] = useState(1);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+    // Persisted Profile
+    const [careerProfile, setCareerProfile] = useState(() => {
+        const saved = localStorage.getItem('mastery_career_profile');
+        return saved ? JSON.parse(saved) : null;
+    });
+
+    // Form State
+    const [formData, setFormData] = useState({
+        experience: '2-4 years',
+        currentRole: '',
+        targetRole: 'Senior Backend Engineer',
+        timeline: '6', // months (string for slider)
+        strategy: 'Market Switch', // Default
+        resumeText: '' // Changed to Text Content for AI
+    });
+
+    // --- Standard Sidebar Navigation ---
     const NavItem = ({ icon: Icon, label, active, onClick }) => (
         <button
             onClick={onClick}
-            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 ease-out group outline-none focus:ring-2 focus:ring-white/20 active:scale-[0.98] active:translate-y-0 ${active
-                ? 'bg-white/10 text-white font-medium shadow-sm translate-y-[-1px]'
-                : 'text-gray-400 hover:text-white hover:bg-white/5 hover:-translate-y-[1px] hover:shadow-md'
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 group ${active
+                ? 'bg-white/10 text-white font-medium shadow-sm'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
             title={isSidebarCollapsed ? label : ''}
         >
@@ -26,27 +49,400 @@ const CareerPage = () => {
         </button>
     );
 
+    // --- Actions ---
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) setFormData(prev => ({ ...prev, resume: file.name }));
+    };
+
+    const handleSetupComplete = async () => {
+        setIsAnalyzing(true);
+        try {
+            // CALL REAL AI SERVICE
+            const aiData = await generateCareerProfile(formData.resumeText, formData.targetRole);
+
+            const profile = {
+                ...formData,
+                ...aiData, // readinessScore, gaps, sprint, resumeIssues
+                // Ensure IDs exist for unique keys
+                gaps: aiData.gaps.map((g, i) => ({ ...g, id: i })),
+                sprint: aiData.sprint || []
+            };
+
+            localStorage.setItem('mastery_career_profile', JSON.stringify(profile));
+            setCareerProfile(profile);
+        } catch (error) {
+            console.error("Analysis Failed", error);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    // --- Sub-Components ---
+
+    // 1. Interactive Control Panel
+    const StrategyControls = ({ profile, updateProfile }) => {
+        const [timeline, setTimeline] = useState(profile.timeline);
+
+        return (
+            <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                    <h2 className="text-xl font-bold text-slate-900 leading-tight">Career Control Panel</h2>
+                    <p className="text-xs text-slate-500 font-medium">Adjust variables to simulate outcomes.</p>
+                </div>
+
+                <div className="flex items-center gap-6 flex-1 w-full md:w-auto">
+                    {/* Strategy Selector */}
+                    <div className="flex-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Strategy</label>
+                        <div className="relative">
+                            <select
+                                className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold py-2 px-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                                defaultValue={profile.strategy}
+                            >
+                                <option>Market Switch (Aggressive)</option>
+                                <option>Internal Promotion (Steady)</option>
+                                <option>Skill Acquisition Only</option>
+                            </select>
+                            <ChevronDown className="absolute right-2 top-2.5 text-slate-400 pointer-events-none" size={14} />
+                        </div>
+                    </div>
+
+                    {/* Timeline Slider */}
+                    <div className="flex-1 min-w-[150px]">
+                        <div className="flex justify-between mb-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Timeline</label>
+                            <span className="text-[10px] font-bold text-indigo-600">{timeline} Months</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="3" max="12" step="1"
+                            value={timeline}
+                            onChange={(e) => setTimeline(e.target.value)}
+                            className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <div className="flex justify-between mt-1 text-[9px] text-slate-400 font-medium">
+                            <span>Aggressive</span>
+                            <span>Steady</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // 2. Expandable Gap Card
+    const GapCard = ({ gap }) => {
+        const [expanded, setExpanded] = useState(false);
+
+        return (
+            <div className={`border rounded-xl transition-all duration-200 ${expanded ? 'border-indigo-200 bg-indigo-50/10' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                <div
+                    onClick={() => setExpanded(!expanded)}
+                    className="p-4 flex items-center justify-between cursor-pointer"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className={`w-1.5 h-1.5 rounded-full ${gap.status === 'Critical' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' : 'bg-amber-400'}`} />
+                        <div>
+                            <h4 className="font-bold text-slate-900 text-sm">{gap.skill}</h4>
+                            <p className="text-[10px] text-slate-500 font-medium">{gap.reason}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {gap.status === 'Critical' && <span className="bg-rose-100 text-rose-700 text-[9px] font-bold px-1.5 py-0.5 rounded">BLOCKER</span>}
+                        <ChevronRight size={14} className={`text-slate-400 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+                    </div>
+                </div>
+
+                {expanded && (
+                    <div className="px-4 pb-4 pt-0 text-xs animate-in slide-in-from-top-2">
+                        <div className="bg-white rounded-lg border border-slate-200 p-3 space-y-3">
+                            <div>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Interview Expectation</span>
+                                <p className="text-slate-700 font-medium mt-0.5">{gap.expectation}</p>
+                            </div>
+                            <div>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Missing Evidence</span>
+                                <p className="text-slate-700 font-medium mt-0.5 flex items-center gap-1">
+                                    <AlertCircle size={10} className="text-amber-500" />
+                                    {gap.missing_evidence}
+                                </p>
+                            </div>
+                            <button className="w-full bg-slate-900 text-white py-2 rounded-lg font-bold text-[10px] hover:bg-black flex items-center justify-center gap-1">
+                                <Zap size={12} /> Add "Master {gap.skill}" to Sprint
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // 3. Sprint Board (Interactive)
+    const SprintBoard = ({ tasks }) => (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <Target size={14} className="text-indigo-600" /> Execution Sprint
+                </h3>
+                <button className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                    <RefreshCw size={10} /> Regenerate
+                </button>
+            </div>
+            <div className="p-2 space-y-2 flex-1 overflow-y-auto">
+                {(tasks || []).map((task, i) => (
+                    <div key={i} className="group p-3 bg-white border border-slate-100 rounded-lg hover:border-slate-300 hover:shadow-sm transition-all cursor-move flex items-center gap-3">
+                        <div className={`w-1 h-6 rounded-full ${task.type === 'Blocker' ? 'bg-rose-500' : task.type === 'Skill' ? 'bg-indigo-500' : 'bg-slate-300'}`} />
+                        <div className="flex-1">
+                            <div className="font-bold text-slate-900 text-xs">{task.title}</div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase">{task.type}</span>
+                                <span className="text-[9px] font-medium text-slate-400 flex items-center gap-0.5"><Activity size={8} /> {task.time}</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                    </div>
+                ))}
+            </div>
+            <div className="p-2 border-t border-slate-100 bg-slate-50">
+                <button className="w-full py-1.5 border border-dashed border-slate-300 rounded-lg text-slate-400 text-[10px] font-bold hover:border-slate-400 hover:text-slate-600 transition-colors">
+                    + Add Custom Task
+                </button>
+            </div>
+        </div>
+    );
+
+    // 4. Resume Action Card
+    const ResumeAction = ({ issue }) => (
+        <div className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-white/10">
+            <AlertCircle size={14} className="text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex-1">
+                <p className="text-[10px] text-slate-300 leading-snug mb-2">{issue.text}</p>
+                <div className="flex gap-2">
+                    <button className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[9px] font-bold transition-colors flex items-center gap-1">
+                        <Star size={8} /> AI Fix
+                    </button>
+                    <button className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[9px] font-bold transition-colors">
+                        Ignor
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+    const CareerDashboard = () => (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 pb-12">
+
+            <StrategyControls profile={careerProfile} />
+
+            <div className="grid grid-cols-12 gap-6">
+
+                {/* COLUMN 1: DIAGNOSIS & ACTION (Span 8) */}
+                <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+
+                    {/* Market Reality Banner */}
+                    <div className="bg-indigo-900 text-white rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden">
+                        <div className="relative z-10 flex items-center gap-4">
+                            <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                                <TrendingUp className="text-emerald-400" size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-sm">Market Reality: {careerProfile.targetRole}</h3>
+                                <div className="flex gap-3 text-[10px] text-slate-300 mt-0.5 font-medium">
+                                    <span className="flex items-center gap-1"><Users size={10} /> High Competition</span>
+                                    <span className="text-slate-400">•</span>
+                                    <span>~240 Applicants/Role</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="relative z-10 text-right">
+                            <div className="text-2xl font-black">Top 15%</div>
+                            <div className="text-[9px] uppercase font-bold text-indigo-200">Required Percentile</div>
+                        </div>
+                        {/* Decor */}
+                        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-indigo-500/30 to-transparent pointer-events-none" />
+                    </div>
+
+                    {/* Split: Gaps & Sprint */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                        {/* Gaps */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between px-1">
+                                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <ShieldAlert size={14} className="text-rose-500" /> Critical Gaps
+                                </h3>
+                                <span className="text-[10px] font-bold text-slate-400">{careerProfile.gaps.length} Items</span>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                {careerProfile.gaps.map((gap) => <GapCard key={gap.id} gap={gap} />)}
+                            </div>
+
+                            {/* Micro-Assessment */}
+                            <div className="mt-4 p-3 bg-slate-50 border border-slate-200/60 rounded-xl">
+                                <h4 className="text-[10px] font-bold text-slate-500 uppercase mb-2">Refine Accuracy</h4>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-700">Rate your SQL confidence:</span>
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map(n => (
+                                            <button key={n} className="w-5 h-5 rounded bg-white border border-slate-200 text-[10px] font-bold hover:bg-indigo-50 hover:border-indigo-300 text-slate-600">{n}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sprint */}
+                        <SprintBoard tasks={careerProfile.sprint} />
+                    </div>
+                </div>
+
+                {/* COLUMN 2: PROOF & SCORES (Span 4) */}
+                <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+
+                    {/* Readiness Score Card */}
+                    <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm text-center relative overflow-hidden group">
+                        <div className="absolute top-2 right-2 text-[9px] font-bold text-slate-300 uppercase">Live Metrics</div>
+                        <div className="w-32 h-32 mx-auto relative flex items-center justify-center mb-2">
+                            <svg className="w-full h-full transform -rotate-90">
+                                <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100" />
+                                <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="351.86" strokeDashoffset={351.86 * (1 - careerProfile.readinessScore / 100)} className="text-indigo-600 transition-all duration-1000" />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-3xl font-black text-slate-900">{careerProfile.readinessScore}%</span>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase">Readiness</span>
+                            </div>
+                        </div>
+                        <p className="text-xs text-slate-500 px-4 leading-relaxed">
+                            You are <strong className="text-rose-600">Off Track</strong> for a 6-month transition. Increase sprint velocity to catch up.
+                        </p>
+                        <button className="mt-4 w-full py-2 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+                            View Burn-down Chart
+                        </button>
+                    </div>
+
+                    {/* Resume Audit 2.0 */}
+                    <div className="bg-[#1F1F1F] rounded-xl p-4 shadow-lg flex-1 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                                <FileText size={14} className="text-indigo-400" /> Resume & Proof
+                            </h3>
+                            <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">Action Required</span>
+                        </div>
+
+                        <div className="space-y-3 flex-1">
+                            {careerProfile.resumeIssues.map((issue, i) => (
+                                <ResumeAction key={i} issue={issue} />
+                            ))}
+                        </div>
+
+                        <button className="w-full mt-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-lg shadow-indigo-900/50 flex items-center justify-center gap-2">
+                            <Upload size={12} /> Upload New Version
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
+
+    // --- Setup Components (Reused but Compact) ---
+    const SetupStep1 = () => (
+        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div><h3 className="text-lg font-bold text-slate-900">Baseline Data</h3></div>
+            <div className="space-y-3">
+
+                {/* File Upload Zone */}
+                <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-slate-800 hover:bg-slate-50 transition-all relative group">
+                    <input
+                        type="file"
+                        accept=".pdf,.txt,.doc,.docx"
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                        onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+
+                            setFormData(prev => ({ ...prev, resume: file.name }));
+
+                            // Handle File Types
+                            if (file.type === 'application/pdf') {
+                                try {
+                                    setFormData(prev => ({ ...prev, resumeText: "Extracting text from PDF... keep waiting..." }));
+                                    const text = await extractTextFromPDF(file);
+                                    setFormData(prev => ({ ...prev, resumeText: text }));
+                                } catch (err) {
+                                    console.error(err);
+                                    setFormData(prev => ({ ...prev, resumeText: "Error reading PDF. Please paste text manually below." }));
+                                }
+                            } else if (file.type === 'text/plain') {
+                                const reader = new FileReader();
+                                reader.onload = (ev) => setFormData(prev => ({ ...prev, resumeText: ev.target.result }));
+                                reader.readAsText(file);
+                            } else {
+                                // Fallback for DOC/Other
+                                setFormData(prev => ({ ...prev, resumeText: `[File detected: ${file.name}]. Please verify content or paste text manually if extraction failed.` }));
+                            }
+                        }}
+                    />
+                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Upload className="w-6 h-6 text-slate-500" />
+                    </div>
+                    <span className="text-sm font-bold text-slate-900">{formData.resume ? `File: ${formData.resume}` : "Upload Resume (PDF/DOC)"}</span>
+                    <span className="text-xs text-slate-400 mt-1">Drag & drop or click to browse</span>
+                </div>
+
+                {/* Text Area (Visible for Verification) */}
+                {formData.resumeText && (
+                    <div className="animate-in fade-in slide-in-from-top-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Verified Content (Editable)</label>
+                        <textarea
+                            className="w-full h-24 text-xs p-3 bg-slate-50 rounded-lg border border-slate-200 outline-none resize-none font-mono text-slate-600"
+                            value={formData.resumeText}
+                            onChange={(e) => setFormData({ ...formData, resumeText: e.target.value })}
+                        />
+                    </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                    <select className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none" value={formData.experience} onChange={(e) => setFormData({ ...formData, experience: e.target.value })}>
+                        <option>0-1 years</option><option>2-4 years</option><option>5-8 years</option>
+                    </select>
+                    <input type="text" className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium outline-none" placeholder="Current Role" value={formData.currentRole} onChange={(e) => setFormData({ ...formData, currentRole: e.target.value })} />
+                </div>
+                <button onClick={() => setSetupStep(2)} disabled={!formData.resumeText || !formData.currentRole} className="w-full bg-slate-900 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-black disabled:opacity-50 transition-all mt-2">Next Step</button>
+            </div>
+        </div>
+    );
+
+    const SetupStep2 = () => (
+        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div><h3 className="text-lg font-bold text-slate-900">Target Role</h3></div>
+            <div className="space-y-3">
+                {['Senior Backend Engineer', 'Staff Engineer', 'Engineering Manager'].map(role => (
+                    <div key={role} onClick={() => setFormData({ ...formData, targetRole: role })} className={`p-3 rounded-lg border cursor-pointer transition-all ${formData.targetRole === role ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-200 hover:border-slate-400'}`}>
+                        <span className="font-bold text-xs block">{role}</span>
+                    </div>
+                ))}
+                <button onClick={handleSetupComplete} className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-indigo-700 shadow-md transition-all mt-4">Run Analysis</button>
+            </div>
+        </div>
+    );
+
     return (
         <div className="flex h-screen w-full bg-[#FAF9F4] p-3 gap-3 font-sans overflow-hidden text-[#1F1F1F]">
-
-            {/* Sidebar - Compact (Global) */}
+            {/* Sidebar (Standard) */}
             <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-56'} bg-[#1F1F1F] rounded-[1.5rem] p-4 flex flex-col hidden md:flex shrink-0 shadow-2xl shadow-black/5 z-20 transition-all duration-300 relative`}>
-                <button
-                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    className="absolute -right-3 top-10 w-6 h-6 bg-[#1F1F1F] rounded-full shadow-lg border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 z-50 transition-colors"
-                >
+                <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="absolute -right-3 top-10 w-6 h-6 bg-[#1F1F1F] rounded-full shadow-lg border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 z-50 transition-colors">
                     {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                 </button>
-
                 <div className={`flex items-center gap-3 mb-8 px-2 pt-1 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
                     <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#1F1F1F] font-bold text-lg shadow-md shrink-0">M</div>
                     {!isSidebarCollapsed && <span className="font-bold text-base tracking-tight text-white whitespace-nowrap overflow-hidden">MasteryLoop</span>}
                 </div>
                 <div className="flex-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
                     <section>
-                        {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">General</div>}
                         <nav className="space-y-0.5">
                             <NavItem icon={LayoutGrid} label="Dashboard" onClick={() => navigate('/')} />
+                            <NavItem icon={Target} label="Today's Focus" onClick={() => navigate('/today-focus')} />
                             <NavItem icon={BookOpen} label="Academic" onClick={() => navigate('/academic')} />
                             <NavItem icon={Trophy} label="Competitive" onClick={() => navigate('/competitive')} />
                             <NavItem icon={Briefcase} label="Career" active />
@@ -54,183 +450,43 @@ const CareerPage = () => {
                             <NavItem icon={Calendar} label="Schedule" onClick={() => navigate('/schedule')} />
                         </nav>
                     </section>
-                    <section>
-                        {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">Tools</div>}
-                        <nav className="space-y-0.5">
-                            <NavItem icon={Settings} label="Search" />
-                            <NavItem icon={LogOut} label="Log out" />
-                        </nav>
-                    </section>
                 </div>
-                <div className="mt-auto pt-4 border-t border-white/5">
-                    <div className={`bg-white/5 p-2 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-inner shrink-0" />
-                        {!isSidebarCollapsed && (
-                            <div className="overflow-hidden">
-                                <div className="text-sm font-bold text-white whitespace-nowrap">Guest User</div>
-                                <div className="text-[10px] text-gray-400 font-medium whitespace-nowrap">Student Plan</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <div className="mt-auto pt-4 border-t border-white/5"><div className={`bg-white/5 p-2 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer ${isSidebarCollapsed ? 'justify-center' : ''}`}><div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-inner shrink-0" />{!isSidebarCollapsed && (<div className="overflow-hidden"><div className="text-sm font-bold text-white whitespace-nowrap">Guest User</div><div className="text-[10px] text-gray-400 font-medium whitespace-nowrap">Student Plan</div></div>)}</div></div>
             </aside>
 
-            {/* Main Content Area */}
-            <main className="flex-1 flex flex-col min-w-0 mx-2 h-full relative">
-
-                {/* Top Header */}
-                <header className="absolute top-0 left-0 right-0 z-50 h-14 flex items-center justify-end shrink-0 pt-2 pointer-events-none px-4 gap-3">
-                    <div className="pointer-events-auto flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-black/5 w-64 transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-[1px] h-10">
-                        <Search className="w-4 h-4 text-gray-400" />
-                        <input type="text" placeholder="Search..." className="flex-1 bg-transparent border-none outline-none text-sm font-medium placeholder:text-gray-400 text-[#1F1F1F]" />
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col min-w-0 mx-2 h-full relative overflow-y-auto scrollbar-hide">
+                <header className="h-16 flex items-center justify-between px-2 shrink-0">
+                    <div>
+                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Career Architecture</h1>
+                        <p className="text-xs text-slate-500">Design, Plan, Execute.</p>
                     </div>
+                    {careerProfile && (
+                        <button onClick={() => setCareerProfile(null)} className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 underline">Reset Plan</button>
+                    )}
                 </header>
 
-                {/* Career Content Scrollable Area */}
-                <div className="flex-1 overflow-y-auto scrollbar-hide pb-6 pr-2 pt-4">
-
-                    {/* 1. Page Header */}
-                    <div className="mb-8 px-1">
-                        <h1 className="text-3xl font-bold text-[#1F1F1F] tracking-tight mb-1">Career Construction</h1>
-                        <p className="text-gray-500 font-medium text-sm">
-                            Build skills that translate directly to job readiness.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-
-                        {/* 2. Target Role (Primary) - Span 12 */}
-                        <div className="col-span-12 bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
-                            <div className="flex items-center gap-6 z-10">
-                                <div className="w-16 h-16 rounded-2xl bg-[#B5C99A] flex items-center justify-center text-[#1F1F1F] shadow-inner">
-                                    <Server className="w-8 h-8" />
+                <div className="flex-1 max-w-6xl mx-auto w-full pb-10">
+                    {!careerProfile ? (
+                        <div className="max-w-md mx-auto mt-8 bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                            {isAnalyzing ? (
+                                <div className="flex flex-col items-center justify-center h-64">
+                                    <div className="w-10 h-10 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                                    <h3 className="text-sm font-bold text-slate-900 animate-pulse">Analyzing Market Data...</h3>
                                 </div>
-                                <div>
-                                    <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Target Role</div>
-                                    <h2 className="text-xl font-bold text-[#1F1F1F] leading-tight">Backend Developer</h2>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-600 uppercase tracking-wide">Mid-Level</span>
-                                        <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-600 uppercase tracking-wide">Remote</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button className="z-10 px-6 py-3 bg-white border border-slate-200 text-[#1F1F1F] rounded-xl font-bold text-sm transition-all duration-200 hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98]">
-                                Change Role
-                            </button>
-                            {/* Decor */}
-                            <div className="absolute right-0 top-0 w-64 h-64 bg-[#B5C99A] rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+                            ) : (
+                                setupStep === 1 ? <SetupStep1 /> : <SetupStep2 />
+                            )}
                         </div>
-
-                        {/* 3. Skill Gap Overview - Span 8 */}
-                        <div className="col-span-12 md:col-span-7 bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 relative">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="font-extrabold text-[#1F1F1F]">Skill Gap Analysis</h3>
-                                <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">View All Skills</button>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="p-1.5 bg-white rounded-lg shadow-sm"><CheckCircle className="w-4 h-4 text-emerald-600" /></div>
-                                        <span className="text-[10px] font-black text-emerald-600 uppercase">Mastered</span>
-                                    </div>
-                                    <div className="font-bold text-sm text-[#1F1F1F]">Data Structs</div>
-                                    <div className="font-bold text-sm text-[#1F1F1F] mt-1">Python API</div>
-                                </div>
-                                <div className="p-4 rounded-xl bg-amber-50 border border-amber-100">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="p-1.5 bg-white rounded-lg shadow-sm"><AlertTriangle className="w-4 h-4 text-amber-600" /></div>
-                                        <span className="text-[10px] font-black text-amber-600 uppercase">In Progress</span>
-                                    </div>
-                                    <div className="font-bold text-sm text-[#1F1F1F]">System Design</div>
-                                    <div className="font-bold text-sm text-[#1F1F1F] mt-1">Docker</div>
-                                </div>
-                                <div className="p-4 rounded-xl bg-rose-50 border border-rose-100">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="p-1.5 bg-white rounded-lg shadow-sm"><XCircle className="w-4 h-4 text-rose-600" /></div>
-                                        <span className="text-[10px] font-black text-rose-600 uppercase">Missing</span>
-                                    </div>
-                                    <div className="font-bold text-sm text-[#1F1F1F]">Scalability</div>
-                                    <div className="font-bold text-sm text-[#1F1F1F] mt-1">Kubernetes</div>
-                                </div>
-                            </div>
-                            <div className="mt-6 pt-6 border-t border-slate-50">
-                                <button className="w-full py-3 bg-[#1F1F1F] text-white rounded-xl font-bold text-sm transition-all duration-200 hover:bg-black hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:scale-[0.98] flex items-center justify-center gap-2">
-                                    Start Skill Plan <ArrowRight className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* 4. Recommended Focus (Action Card) - Span 4 */}
-                        <div className="col-span-12 md:col-span-5 bg-[#1F1F1F] rounded-[2rem] p-8 text-white shadow-lg flex flex-col justify-between relative overflow-hidden group">
-                            <div className="z-10">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <StarIcon className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                    <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Today's Focus</span>
-                                </div>
-                                <h3 className="text-2xl font-extrabold mb-1">System Design Output</h3>
-                                <p className="text-white/60 font-medium text-sm">Load Balancing & Hashing</p>
-                                <div className="mt-4 p-3 bg-white/10 rounded-xl border border-white/5 backdrop-blur-sm">
-                                    <span className="text-[10px] font-bold text-white/50 uppercase block mb-1">Why this?</span>
-                                    <p className="text-xs font-semibold text-white/90">Recurring topic in Backend interviews.</p>
-                                </div>
-                            </div>
-                            <button className="mt-8 w-full py-3 bg-white text-[#1F1F1F] rounded-xl font-bold text-sm transition-all duration-200 hover:bg-gray-100 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.98] flex items-center justify-center gap-2 relative z-10">
-                                Start Practice <ArrowRight className="w-4 h-4" />
-                            </button>
-                            {/* Texture */}
-                            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none" />
-                        </div>
-
-                        {/* 5. Practice & Interview Prep - Span 12 */}
-                        <div className="col-span-12">
-                            <h3 className="font-extrabold text-[#1F1F1F] mb-4 px-1">Interview Prep Lab</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {[
-                                    { title: 'Mock Interview', sub: 'System Design Round', time: '45m', diff: 'Hard', icon: Users, color: 'bg-indigo-50 text-indigo-600' },
-                                    { title: 'Live Coding', sub: 'LC Hard: DP', time: '30m', diff: 'Hard', icon: PenTool, color: 'bg-emerald-50 text-emerald-600' },
-                                    { title: 'Behavioral', sub: 'Leadership Principles', time: '15m', diff: 'Easy', icon: Globe, color: 'bg-amber-50 text-amber-600' },
-                                ].map((item, i) => (
-                                    <div key={i} className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 group cursor-pointer">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className={`p-3 rounded-2xl ${item.color}`}>
-                                                <item.icon className="w-6 h-6" />
-                                            </div>
-                                            <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase tracking-wide">{item.time}</span>
-                                        </div>
-                                        <h4 className="font-bold text-[#1F1F1F] text-lg mb-0.5">{item.title}</h4>
-                                        <p className="text-sm font-medium text-slate-500 mb-4">{item.sub}</p>
-                                        <button className="w-full py-2 bg-slate-50 text-[#1F1F1F] rounded-lg font-bold text-xs transition-colors group-hover:bg-[#1F1F1F] group-hover:text-white">
-                                            Prepare Now
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                    </div>
+                    ) : (
+                        <CareerDashboard />
+                    )}
                 </div>
             </main>
-            {/* Right Panel - Compact Calendar & Timeline (Global) */}
+
             <RightSidebar />
         </div>
     );
 };
-
-const StarIcon = (props) => (
-    <svg
-        {...props}
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-    >
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
-)
 
 export default CareerPage;

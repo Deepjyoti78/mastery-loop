@@ -9,19 +9,27 @@ import DrillPage from './pages/DrillPage';
 import CareerPage from './pages/CareerPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import SchedulePage from './pages/SchedulePage';
-import { LapPage, TestPage, ReteachPage } from './pages/AcademicFlow';
-import LearningContentPage from './pages/LearningContentPage';
+import AcademicFlow from './pages/AcademicFlow';
+
 import TodayFocusPage from './pages/TodayFocusPage';
+import SetupPage from './pages/SetupPage';
 import AuthModal from './components/AuthModal';
 
 function App() {
   const [userIntent, setUserIntent] = useState(null);
-  const [userData, setUserData] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userData, setUserData] = useState(() => {
+    const saved = localStorage.getItem('mastery_user_data');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('mastery_auth') === 'true';
+  });
 
   const handleLogin = (data) => {
-    setUserData(data); // In real app, this would be a user object
+    setUserData(data);
     setIsAuthenticated(true);
+    localStorage.setItem('mastery_auth', 'true');
+    localStorage.setItem('mastery_user_data', JSON.stringify(data));
   };
 
   return (
@@ -41,24 +49,15 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage setIntent={setUserIntent} />} />
           <Route path="/academic" element={<AcademicExcellence />} />
-          <Route path="/academic/learn/:subject/:concept" element={<LearningContentPage />} />
-          <Route path="/academic/lap" element={<LapPage />} />
-          <Route path="/academic/test" element={<TestPage />} />
-          <Route path="/academic/reteach" element={<ReteachPage />} />
+          <Route path="/academic/flow/:subjectId" element={<AcademicFlow />} />
+
           <Route path="/competitive" element={<CompetitivePage />} />
           <Route path="/competitive/drill" element={<DrillPage />} />
           <Route path="/career" element={<CareerPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/today-focus" element={<TodayFocusPage />} />
-          <Route
-            path="/setup"
-            element={
-              userIntent ?
-                <InputPage intent={userIntent} setUserData={setUserData} /> :
-                <Navigate to="/" replace />
-            }
-          />
+          <Route path="/setup" element={<SetupPage />} />
 
         </Routes>
       </div>

@@ -151,7 +151,10 @@ const CompetitivePage = () => {
                                     </div>
                                 </div>
                                 <div className="z-10 w-full sm:w-auto">
-                                    <button className="w-full sm:w-auto px-8 py-4 bg-[#1F1F1F] text-white rounded-xl font-bold text-sm hover:bg-black transition-all shadow-lg active:scale-[0.95] flex items-center justify-center gap-2 group-hover:px-10">
+                                    <button
+                                        onClick={() => navigate('/competitive/drill')}
+                                        className="w-full sm:w-auto px-8 py-4 bg-[#1F1F1F] text-white rounded-xl font-bold text-sm hover:bg-black transition-all shadow-lg active:scale-[0.95] flex items-center justify-center gap-2 group-hover:px-10"
+                                    >
                                         Start Drill <ArrowRight className="w-4 h-4" />
                                     </button>
                                 </div>
