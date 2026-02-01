@@ -124,7 +124,9 @@ const SetupPage = () => {
 
                     // Store userId for session
                     localStorage.setItem('mastery_userid', userId.toString());
-                    console.log("User profile saved to database with ID:", userId);
+                    if (import.meta.env.DEV) {
+                        console.info('User profile saved to database with ID:', userId);
+                    }
                 } catch (error) {
                     console.error("Database save failed:", error);
                     // Fallback is already handled by localStorage above
@@ -311,8 +313,8 @@ const SetupPage = () => {
                                         <span className="text-lg text-slate-400 font-bold self-end mb-2">min</span>
                                     </div>
                                     <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mt-2 transition-colors duration-300 ${answers.time <= 30 ? 'bg-green-100 text-green-700' :
-                                            answers.time <= 60 ? 'bg-indigo-100 text-indigo-700' :
-                                                'bg-purple-100 text-purple-700'
+                                        answers.time <= 60 ? 'bg-indigo-100 text-indigo-700' :
+                                            'bg-purple-100 text-purple-700'
                                         }`}>
                                         <Clock className="w-3 h-3" />
                                         {answers.time <= 30 ? "Light Session" :

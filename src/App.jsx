@@ -58,9 +58,6 @@ function App() {
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/today-focus" element={<TodayFocusPage />} />
           <Route path="/setup" element={<SetupPage />} />
-
-          <Route path="/today-focus" element={<TodayFocusPage />} />
-          <Route path="/setup" element={<SetupPage />} />
           <Route path="/settings" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
 

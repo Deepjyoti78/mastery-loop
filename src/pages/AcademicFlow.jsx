@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-    BookOpen, CheckCircle, Lock, Play,
+    BookOpen, Lock, Play,
     ChevronRight, ChevronDown, Check,
     Trophy, ArrowRight, Zap, Target, Search, X, Loader2,
-    LayoutGrid, Calendar, Users, BarChart2,
-    Settings, LogOut, Bell, ChevronLeft,
-    Layers, Brain, Briefcase, Clock, Plus, Star, Hash
+    Bell
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getSubjectData, curriculum } from '../data/curriculum';

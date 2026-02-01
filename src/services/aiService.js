@@ -37,7 +37,9 @@ export const generateLearningCard = async (topic, difficulty = "Medium") => {
   }
 
   // 3. Fallback to Local
-  console.log("[AI Service] No AI Keys found. Using Local Generator.");
+  if (import.meta.env.DEV) {
+    console.info('[AI Service] No AI Keys found. Using Local Generator.');
+  }
   return generateLocalContent(topic);
 };
 
@@ -215,7 +217,9 @@ export const generateCareerProfile = async (resumeText, targetRole) => {
   }
 
   // 3. Fallback
-  console.log("[AI Service] No API Key. Generating Local Career Profile.");
+  if (import.meta.env.DEV) {
+    console.info('[AI Service] No API Key. Generating Local Career Profile.');
+  }
   return generateLocalCareerProfile(resumeText, targetRole);
 };
 

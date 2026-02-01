@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-    LayoutGrid, Calendar, Users, BarChart2, BookOpen,
-    Settings, LogOut, Search, Bell, ChevronRight,
-    CheckCircle, AlertTriangle, XCircle, ArrowRight,
-    Layers, Brain, Target, Trophy, Briefcase, ChevronLeft,
+    LayoutGrid, BarChart2, BookOpen,
+    Search, Bell, ChevronRight,
+    CheckCircle, ArrowRight,
     Lock, Play, Book, Clock, Star, Zap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,20 +13,6 @@ const AcademicExcellence = () => {
     const navigate = useNavigate();
     const [selectedSubject, setSelectedSubject] = useState('Operating Systems');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    const [currentUser, setCurrentUser] = useState({ name: 'Guest User', role: 'Student Plan' });
-
-    useEffect(() => {
-        const userData = localStorage.getItem('mastery_user_data');
-        if (userData) {
-            const parsed = JSON.parse(userData);
-            setCurrentUser({ name: parsed.name, role: parsed.email || 'Student Plan' });
-        }
-    }, []);
-
-    const handleLogout = () => {
-        localStorage.removeItem('mastery_auth');
-        window.location.href = '/';
-    };
 
     // Mock Data for Subjects
     const subjects = [
@@ -67,24 +52,9 @@ const AcademicExcellence = () => {
 
     const currentConcepts = conceptMaps[selectedSubject] || [];
 
-    const NavItem = ({ icon: Icon, label, active, onClick }) => (
-        <button
-            onClick={onClick}
-            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 group ${active
-                ? 'bg-white/10 text-white font-medium shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-            title={isSidebarCollapsed ? label : ''}
-        >
-            <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-gray-500 group-hover:text-white'}`} />
-            {!isSidebarCollapsed && <span className="text-sm tracking-wide">{label}</span>}
-        </button>
-    );
-
     return (
         <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
 
-            {/* Sidebar */}
             {/* Sidebar */}
             <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
