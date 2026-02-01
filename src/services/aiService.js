@@ -1,9 +1,17 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 /**
  * AI Service Client - Direct Integration
- * Replaces n8n with Direct OpenAI/Gemini or High-Quality Local Fallback.
+ * Prioritizes Google Gemini, falls back to OpenAI or High-Quality Local Mock.
  */
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+
+// --- GEMINI HELPER ---
+const getGeminiModel = (apiKey) => {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+};
 
 /**
  * Generates learning content using Direct AI (or highly realistic local generation).
@@ -11,16 +19,46 @@ const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
  * @param {string} difficulty - Difficulty level.
  */
 export const generateLearningCard = async (topic, difficulty = "Medium") => {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const openAIKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-  // 1. If API Key exists, use Real AI
-  if (apiKey) {
-    return await fetchOpenAI(topic, apiKey);
+  // 1. Try Gemini
+  if (geminiKey) {
+    try {
+      return await fetchGemini(topic, geminiKey);
+    } catch (e) {
+      console.error("Gemini Error:", e);
+    }
   }
 
-  // 2. Otherwise, use Sophisticated Local Generator (Instant, Reliable)
-  console.log("[AI Service] No API Key found. Using Local Generator.");
+  // 2. Try OpenAI
+  if (openAIKey) {
+    return await fetchOpenAI(topic, openAIKey);
+  }
+
+  // 3. Fallback to Local
+  console.log("[AI Service] No AI Keys found. Using Local Generator.");
   return generateLocalContent(topic);
+};
+
+// --- GEMINI IMPLEMENTATION ---
+const fetchGemini = async (topic, apiKey) => {
+  const model = getGeminiModel(apiKey);
+  const prompt = `
+        You are an expert tutor. Explain "${topic}" strictly in valid JSON format.
+        Schema: {
+            "core_concept": { "title": "string", "description": "string" },
+            "visual_hint": "string",
+            "analogy": "string",
+            "mechanisms": [ { "title": "string", "description": "string" } ],
+            "quiz": { "question": "string", "options": ["string"], "correct_index": number }
+        }
+    `;
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
+  // Clean markdown code blocks if present
+  const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
+  return transformAIResponse(JSON.parse(jsonStr));
 };
 
 // --- REAL AI IMPLEMENTATION ---
@@ -122,52 +160,61 @@ export const generateQuiz = async () => null;
  * @param {string} targetRole - The desired role.
  */
 export const generateCareerProfile = async (resumeText, targetRole) => {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const openAIKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-  if (apiKey) {
+  // 1. Try Gemini
+  if (geminiKey) {
+    try {
+      const model = getGeminiModel(geminiKey);
+      const prompt = `
+                You are a strict Career Architect. Analyze this resume for the role of ${targetRole}.
+                Resume: ${resumeText}
+                
+                Output strictly valid JSON:
+                {
+                    "readinessScore": number (0-100),
+                    "gaps": [{ "id": number, "skill": "string", "status": "Critical"|"Warning", "reason": "string", "expectation": "string", "missing_evidence": "string" }],
+                    "sprint": [{ "title": "string", "type": "Blocker"|"Skill"|"Admin", "time": "string" }],
+                    "resumeIssues": [{ "text": "string", "fix": "string" }]
+                }
+            `;
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().replace(/```json/g, '').replace(/```/g, '');
+      return JSON.parse(text);
+    } catch (e) {
+      console.error("Gemini Career Error:", e);
+    }
+  }
+
+  // 2. Try OpenAI
+  if (openAIKey) {
     try {
       const response = await fetch(OPENAI_API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Authorization": `Bearer ${openAIKey}`
         },
         body: JSON.stringify({
           model: "gpt-3.5-turbo",
           messages: [{
             role: "system",
-            content: `You are a strict Career Architect. Analyze the resume text against the target role.
-                        Output strictly valid JSON with this schema:
-                        {
-                            "readinessScore": number (0-100),
-                            "gaps": [
-                                { "id": number, "skill": "string", "status": "Critical" | "Warning", "reason": "string", "expectation": "string", "missing_evidence": "string" }
-                            ],
-                            "sprint": [
-                                { "title": "string", "type": "Blocker" | "Skill" | "Admin", "time": "string" }
-                            ],
-                            "resumeIssues": [
-                                { "text": "string", "fix": "string" }
-                            ]
-                        }`
+            content: `You are a strict Career Architect. Output valid JSON.`
           }, {
             role: "user",
-            content: `Target Role: ${targetRole}\nResume: ${resumeText}`
+            content: `Target Role: ${targetRole}\nResume: ${resumeText}\nSchema: { readinessScore, gaps: [], sprint: [], resumeIssues: [] }`
           }]
         })
       });
-
       const data = await response.json();
-      const content = JSON.parse(data.choices[0].message.content);
-      return content;
-
+      return JSON.parse(data.choices[0].message.content);
     } catch (e) {
-      console.error("OpenAI Error (Career):", e);
-      return generateLocalCareerProfile(resumeText, targetRole);
+      console.error("OpenAI Career Error:", e);
     }
   }
 
-  // Fallback: Smart Local Mock
+  // 3. Fallback
   console.log("[AI Service] No API Key. Generating Local Career Profile.");
   return generateLocalCareerProfile(resumeText, targetRole);
 };

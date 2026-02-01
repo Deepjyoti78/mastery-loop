@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import RightSidebar from '../components/RightSidebar';
+import Sidebar from '../components/Sidebar';
 
 const AcademicExcellence = () => {
     const navigate = useNavigate();
@@ -81,64 +82,18 @@ const AcademicExcellence = () => {
     );
 
     return (
-        <div className="flex h-screen w-full bg-[#FAF9F4] p-3 gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
 
             {/* Sidebar */}
-            <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-56'} bg-[#1F1F1F] rounded-[1.5rem] p-4 flex flex-col hidden md:flex shrink-0 shadow-2xl shadow-black/5 z-20 transition-all duration-300 relative`}>
-                <button
-                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    className="absolute -right-3 top-10 w-6 h-6 bg-[#1F1F1F] rounded-full shadow-lg border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 z-50 transition-colors"
-                >
-                    {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-                </button>
-
-                <div className={`flex items-center gap-3 mb-8 px-2 pt-1 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#1F1F1F] font-bold text-lg shadow-md shrink-0">M</div>
-                    {!isSidebarCollapsed && <span className="font-bold text-base tracking-tight text-white whitespace-nowrap overflow-hidden">MasteryLoop</span>}
-                </div>
-
-                <div className="flex-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
-                    <section>
-                        {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">General</div>}
-                        <nav className="space-y-0.5">
-                            <NavItem icon={LayoutGrid} label="Dashboard" onClick={() => navigate('/')} />
-                            <NavItem icon={Target} label="Today's Focus" onClick={() => navigate('/today-focus')} />
-                            <NavItem icon={BookOpen} label="Academic" active />
-                            <NavItem icon={Trophy} label="Competitive" onClick={() => navigate('/competitive')} />
-                            <NavItem icon={Briefcase} label="Career" onClick={() => navigate('/career')} />
-                            <NavItem icon={BarChart2} label="Analytics" onClick={() => navigate('/analytics')} />
-                            <NavItem icon={Calendar} label="Schedule" onClick={() => navigate('/schedule')} />
-                        </nav>
-                    </section>
-
-                    <section>
-                        {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">Tools</div>}
-                        <nav className="space-y-0.5">
-                            <NavItem icon={Settings} label="Settings" onClick={() => navigate('/settings')} />
-                            <NavItem icon={LogOut} label="Log out" onClick={handleLogout} />
-                        </nav>
-                    </section>
-                </div>
-
-                <div className="mt-auto pt-4 border-t border-white/5">
-                    <div className="bg-white/5 p-2 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-inner" />
-                        {!isSidebarCollapsed && (
-                            <div className="overflow-hidden">
-                                <div className="text-sm font-bold text-white whitespace-nowrap">{currentUser.name}</div>
-                                <div className="text-[10px] text-gray-400 font-medium whitespace-nowrap">{currentUser.role}</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </aside>
+            {/* Sidebar */}
+            <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col min-w-0 mx-2 h-full relative">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative">
 
                 {/* Header */}
-                <header className="absolute top-0 left-0 right-0 z-50 h-14 flex items-center justify-end shrink-0 pt-2 pointer-events-none px-4 gap-3">
-                    <div className="pointer-events-auto flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-black/5 w-64">
+                <header className="absolute top-0 left-0 right-0 z-10 h-14 flex items-center justify-end shrink-0 pt-2 pointer-events-none px-4 gap-3 bg-[#FAF9F4]/90 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none transition-all">
+                    <div className="pointer-events-auto flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-black/5 w-64 ml-auto md:ml-0">
                         <Search className="w-4 h-4 text-gray-400" />
                         <input type="text" placeholder="Search..." className="flex-1 bg-transparent text-sm outline-none" />
                     </div>
@@ -150,9 +105,9 @@ const AcademicExcellence = () => {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto scrollbar-hide pb-6 pr-2 pt-4">
+                <div className="flex-1 overflow-y-auto scrollbar-hide pb-6 md:pr-2 pt-20 md:pt-4 px-4 md:px-0">
                     <div className="mb-6">
-                        <h1 className="text-3xl font-black text-[#1F1F1F] tracking-tight mb-1">Academic Dashboard</h1>
+                        <h1 className="text-2xl md:text-3xl font-black text-[#1F1F1F] tracking-tight mb-1">Academic Dashboard</h1>
                         <p className="text-gray-500 font-medium text-sm">Track your progress and master new concepts.</p>
                     </div>
 
@@ -166,7 +121,7 @@ const AcademicExcellence = () => {
                                     onClick={() => setSelectedSubject(subject.name)}
                                     className={`relative p-5 rounded-[1.5rem] border transition-all duration-300 flex flex-col justify-between text-left h-36 group
                                     ${isSelected
-                                            ? 'bg-[#1F1F1F] text-white border-[#1F1F1F] shadow-2xl scale-[1.03] ring-4 ring-offset-2 ring-slate-200 z-10'
+                                            ? 'bg-[#1F1F1F] text-white border-[#1F1F1F] shadow-2xl scale-[1.02] ring-4 ring-offset-2 ring-slate-200 z-10'
                                             : 'bg-white text-[#1F1F1F] border-slate-100 hover:border-slate-300 hover:-translate-y-1 hover:shadow-lg'}`}
                                 >
                                     <div className="flex justify-between items-start w-full">
@@ -197,9 +152,9 @@ const AcademicExcellence = () => {
                     </div>
 
                     {/* 2. ROADMAP SECTION */}
-                    <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm relative overflow-hidden mb-20 md:mb-0">
                         {/* Motivation Header */}
-                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b border-slate-50 gap-4">
                             <div>
                                 <h2 className="text-xl font-black text-[#1F1F1F] mb-1">{selectedSubject} Roadmap</h2>
                                 <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
@@ -207,12 +162,12 @@ const AcademicExcellence = () => {
                                     <span>You're 2 steps away from unlocking <span className="font-bold text-slate-900">Deadlock Prevention</span></span>
                                 </div>
                             </div>
-                            <div className="hidden md:flex items-center gap-3">
-                                <div className="px-3 py-1.5 bg-slate-50 rounded-lg flex flex-col items-center min-w-[60px]">
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                <div className="flex-1 md:flex-none px-3 py-1.5 bg-slate-50 rounded-lg flex flex-col items-center min-w-[60px]">
                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
                                     <span className="text-sm font-black text-slate-900">{currentConcepts.length}</span>
                                 </div>
-                                <div className="px-3 py-1.5 bg-emerald-50 rounded-lg flex flex-col items-center min-w-[60px]">
+                                <div className="flex-1 md:flex-none px-3 py-1.5 bg-emerald-50 rounded-lg flex flex-col items-center min-w-[60px]">
                                     <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Done</span>
                                     <span className="text-sm font-black text-emerald-700">{currentConcepts.filter(c => c.status === 'Mastered').length}</span>
                                 </div>
@@ -220,7 +175,7 @@ const AcademicExcellence = () => {
                         </div>
 
                         {/* Interactive Roadmap */}
-                        <div className="relative pl-3 space-y-3">
+                        <div className="relative pl-3 space-y-3 pb-8">
                             {/* Vertical Connecting Line */}
                             <div className="absolute left-[2rem] top-4 bottom-4 w-0.5 bg-gradient-to-b from-emerald-200 via-slate-200 to-slate-100 z-0"></div>
 
@@ -231,46 +186,48 @@ const AcademicExcellence = () => {
 
                                 return (
                                     <div key={i} className={`relative z-10 group transition-all duration-300 ${isLocked ? 'opacity-60 hover:opacity-100' : ''}`}>
-                                        <div className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300
-                                            ${isActive ? 'bg-white border-indigo-200 shadow-lg shadow-indigo-50/50 scale-[1.01] ring-1 ring-indigo-50' :
+                                        <div className={`flex flex-col md:flex-row md:items-center gap-4 p-3 rounded-xl border transition-all duration-300
+                                            ${isActive ? 'bg-white border-indigo-200 shadow-sm scale-[1.01]' :
                                                 isMastered ? 'bg-slate-50/50 border-slate-100' :
                                                     'bg-white border-transparent hover:border-slate-200 hover:shadow-sm'}
                                         `}>
-                                            {/* Status Indicator (Left) */}
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 border-white shadow-sm z-10
-                                                ${isMastered ? 'bg-emerald-500 text-white' :
-                                                    isActive ? 'bg-indigo-500 text-white animate-pulse-slow' :
-                                                        'bg-slate-200 text-slate-400'}
-                                            `}>
-                                                {isMastered && <CheckCircle className="w-4 h-4" />}
-                                                {isActive && <Play className="w-3 h-3 fill-current ml-0.5" />}
-                                                {isLocked && <Lock className="w-3 h-3" />}
-                                            </div>
-
-                                            {/* Content (Center) */}
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-0.5">
-                                                    <h3 className={`font-bold text-sm truncate ${isLocked ? 'text-slate-500' : 'text-[#1F1F1F]'}`}>
-                                                        {concept.title}
-                                                    </h3>
-                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0
-                                                        ${concept.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-700' :
-                                                            concept.difficulty === 'Medium' ? 'bg-amber-50 text-amber-700' :
-                                                                'bg-rose-50 text-rose-700'}
-                                                    `}>
-                                                        {concept.difficulty}
-                                                    </span>
+                                            <div className="flex items-start md:items-center gap-4">
+                                                {/* Status Indicator (Left) */}
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 border-white shadow-sm z-10 mt-1 md:mt-0
+                                                    ${isMastered ? 'bg-emerald-500 text-white' :
+                                                        isActive ? 'bg-indigo-500 text-white animate-pulse-slow' :
+                                                            'bg-slate-200 text-slate-400'}
+                                                `}>
+                                                    {isMastered && <CheckCircle className="w-4 h-4" />}
+                                                    {isActive && <Play className="w-3 h-3 fill-current ml-0.5" />}
+                                                    {isLocked && <Lock className="w-3 h-3" />}
                                                 </div>
 
-                                                <p className="text-xs text-slate-500 truncate max-w-md">{concept.desc || `Master the core concepts of ${concept.title} to advance.`}</p>
+                                                {/* Content (Center) */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                                        <h3 className={`font-bold text-sm truncate ${isLocked ? 'text-slate-500' : 'text-[#1F1F1F]'}`}>
+                                                            {concept.title}
+                                                        </h3>
+                                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0
+                                                            ${concept.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-700' :
+                                                                concept.difficulty === 'Medium' ? 'bg-amber-50 text-amber-700' :
+                                                                    'bg-rose-50 text-rose-700'}
+                                                        `}>
+                                                            {concept.difficulty}
+                                                        </span>
+                                                    </div>
+
+                                                    <p className="text-xs text-slate-500 truncate max-w-md">{concept.desc || `Master the core concepts of ${concept.title} to advance.`}</p>
+                                                </div>
                                             </div>
 
                                             {/* Action Button (Right) */}
-                                            <div className="self-center shrink-0">
+                                            <div className="self-end md:self-center shrink-0 w-full md:w-auto flex justify-end">
                                                 {!isLocked ? (
                                                     <button
                                                         onClick={() => navigate(`/academic/flow/${selectedSubject.toLowerCase().replace(/ /g, '-')}`)}
-                                                        className={`px-3 py-1.5 rounded-lg font-bold text-[10px] transition-all flex items-center gap-1.5 shadow-sm
+                                                        className={`px-3 py-1.5 rounded-lg font-bold text-[10px] transition-all flex items-center justify-center gap-1.5 shadow-sm w-full md:w-auto
                                                             ${isActive
                                                                 ? 'bg-[#1F1F1F] text-white hover:bg-black hover:scale-105'
                                                                 : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900'}
@@ -301,7 +258,9 @@ const AcademicExcellence = () => {
                     </div>
                 </div>
             </main>
-            <RightSidebar />
+            <div className="hidden xl:block h-full">
+                <RightSidebar />
+            </div>
         </div>
     );
 };

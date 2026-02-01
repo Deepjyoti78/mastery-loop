@@ -7,6 +7,7 @@ import {
     Trophy, Briefcase, Zap, CheckCircle, AlertTriangle, XCircle, ArrowRight, ChevronLeft,
     Activity, Target, Clock, Brain, GraduationCap
 } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
 
 const LandingPage = ({ setIntent }) => {
     const navigate = useNavigate();
@@ -73,76 +74,25 @@ const LandingPage = ({ setIntent }) => {
     );
 
     return (
-        <div className="flex h-screen w-full bg-[#FAF9F4] p-3 gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
 
             {/* Sidebar */}
-            <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-56'} bg-[#1F1F1F] rounded-[1.5rem] p-4 flex flex-col hidden md:flex shrink-0 shadow-2xl shadow-black/5 z-20 transition-all duration-300 relative`}>
-                <button
-                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    className="absolute -right-3 top-10 w-6 h-6 bg-[#1F1F1F] rounded-full shadow-lg border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 z-50 transition-colors"
-                >
-                    {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-                </button>
-
-                {/* Brand */}
-                <div className={`flex items-center gap-3 mb-8 px-2 pt-1 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#1F1F1F] font-bold text-lg shadow-md shrink-0">
-                        M
-                    </div>
-                    {!isSidebarCollapsed && <span className="font-bold text-base tracking-tight text-white whitespace-nowrap overflow-hidden">MasteryLoop</span>}
-                </div>
-
-                {/* Navigation */}
-                <div className="flex-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
-                    <section>
-                        {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">General</div>}
-                        <nav className="space-y-0.5">
-                            <NavItem icon={LayoutGrid} label="Dashboard" active />
-                            <NavItem icon={Target} label="Today's Focus" onClick={() => navigate('/today-focus')} />
-                            <NavItem icon={BookOpen} label="Academic" onClick={() => handlePathSelection('academic')} />
-                            <NavItem icon={Trophy} label="Competitive" onClick={() => handlePathSelection('competitive')} />
-                            <NavItem icon={Briefcase} label="Career" onClick={() => handlePathSelection('career')} />
-                            <NavItem icon={BarChart2} label="Analytics" onClick={() => navigate('/analytics')} />
-                            <NavItem icon={Calendar} label="Schedule" onClick={() => navigate('/schedule')} />
-                        </nav>
-                    </section>
-                    <section>
-                        <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3">Tools</div>
-                        <nav className="space-y-0.5">
-                            <NavItem icon={Settings} label="Search" />
-                            <NavItem icon={LogOut} label="Log out" onClick={handleLogout} />
-                        </nav>
-                    </section>
-                </div>
-
-                {/* User Profile */}
-                <div className="mt-auto pt-4 border-t border-white/5">
-                    <div className="bg-white/5 p-2 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-inner" />
-                        {!isSidebarCollapsed && (
-                            <div className="overflow-hidden">
-                                <div className="text-sm font-bold text-white whitespace-nowrap">{currentUser.name}</div>
-                                <div className="text-[10px] text-gray-400 font-medium whitespace-nowrap">{currentUser.role}</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </aside>
+            <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col min-w-0 mx-2 h-full relative">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative">
 
                 {/* Top Header */}
-                <header className="absolute top-0 left-0 right-0 z-50 h-20 flex items-center justify-between px-2 shrink-0 pt-4 pointer-events-none">
+                <header className="absolute top-0 left-0 right-0 z-10 h-20 flex flex-col justify-center gap-4 md:flex-row md:items-center md:justify-between px-4 md:px-2 shrink-0 pt-20 md:pt-4 pointer-events-none bg-[#FAF9F4]/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none transition-all pb-4">
                     <div className="pointer-events-auto">
-                        <h1 className="text-2xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2">
+                        <h1 className="text-xl md:text-2xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2">
                             Good morning, {currentUser.name.split(' ')[0]}
                         </h1>
                         <p className="text-[#1F1F1F]/60 font-medium text-sm">Your Academic Plan</p>
                     </div>
 
-                    <div className="flex items-center gap-3 pointer-events-auto">
-                        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-black/5 w-56 transition-all hover:shadow-md h-10">
+                    <div className="flex items-center gap-3 pointer-events-auto self-end md:self-auto w-full md:w-auto justify-end">
+                        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-black/5 w-full md:w-56 transition-all hover:shadow-md h-10">
                             <Search className="w-3.5 h-3.5 text-gray-400" />
                             <input
                                 type="text"
@@ -150,15 +100,15 @@ const LandingPage = ({ setIntent }) => {
                                 className="flex-1 bg-transparent border-none outline-none text-xs font-medium placeholder:text-gray-400 text-[#1F1F1F]"
                             />
                         </div>
-                        <button className="p-2.5 bg-white rounded-full shadow-sm border border-black/5 hover:bg-gray-50 transition-colors">
+                        <button className="p-2.5 bg-white rounded-full shadow-sm border border-black/5 hover:bg-gray-50 transition-colors shrink-0">
                             <Bell className="w-4 h-4 text-[#1F1F1F]" />
                         </button>
                     </div>
                 </header>
 
                 {/* Dashboard Grid - Darker Colors */}
-                <div className="flex-1 min-h-0 pt-24 px-2 pb-2">
-                    <div className="grid grid-cols-12 gap-5 h-full pb-1">
+                <div className="flex-1 min-h-0 pt-44 md:pt-24 px-4 md:px-2 pb-2 overflow-y-auto scrollbar-hide">
+                    <div className="grid grid-cols-12 gap-5 pb-20 md:pb-1">
 
                         {/* ROW 1: Hero (Col 7) & Mastery (Col 5) */}
                         <div className="col-span-12 lg:col-span-7 bg-[#E8DCC0] rounded-[2rem] p-5 relative overflow-hidden flex flex-col justify-between shadow-sm min-h-[160px]">
@@ -176,7 +126,7 @@ const LandingPage = ({ setIntent }) => {
                             </div>
 
                             {/* Inner Card */}
-                            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between border border-white/20 shadow-sm hover:translate-y-[-2px] transition-transform cursor-pointer group">
+                            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border border-white/20 shadow-sm hover:translate-y-[-2px] transition-transform cursor-pointer group gap-4 sm:gap-0">
                                 <div>
                                     <h2 className="text-xl font-extrabold text-[#1F1F1F] mb-1 leading-none">{focusTopic.title}</h2>
                                     <p className="text-xs font-medium text-[#1F1F1F]/60">High Priority • {focusTopic.subject}</p>
@@ -187,7 +137,7 @@ const LandingPage = ({ setIntent }) => {
                                 </div>
                                 <button
                                     onClick={() => navigate('/academic')}
-                                    className="bg-[#1F1F1F] text-white px-4 py-2 rounded-xl font-bold text-xs shadow-lg group-hover:bg-black transition-colors"
+                                    className="bg-[#1F1F1F] text-white px-4 py-2 rounded-xl font-bold text-xs shadow-lg group-hover:bg-black transition-colors w-full sm:w-auto"
                                 >
                                     View Learning
                                 </button>
@@ -226,19 +176,19 @@ const LandingPage = ({ setIntent }) => {
                             <h3 className="text-sm font-bold text-[#1F1F1F] mb-3">Today's Mission</h3>
 
                             {/* Inner Card */}
-                            <div className="bg-[#FAF6E8] rounded-2xl p-4 flex items-center justify-between border border-[#F8D57E]/20 flex-1 group cursor-pointer hover:shadow-md transition-all">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
+                            <div className="bg-[#FAF6E8] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between border border-[#F8D57E]/20 flex-1 group cursor-pointer hover:shadow-md transition-all gap-4 sm:gap-0">
+                                <div className="text-center sm:text-left">
+                                    <div className="flex flex-col sm:flex-row items-center gap-2 mb-1">
                                         <h2 className="text-lg font-extrabold text-[#1F1F1F]">Pointer Arithmetic</h2>
                                         <span className="text-xs font-medium text-[#1F1F1F]/40">— Pointer Reversal</span>
                                     </div>
                                     <p className="text-xs font-bold text-[#ECA626] uppercase tracking-wide">Data Structures</p>
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
+                                <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
                                     <span className="text-[10px] font-bold text-[#1F1F1F]/40">45 min</span>
                                     <button
                                         onClick={() => navigate('/today-focus')}
-                                        className="bg-[#1F1F1F] text-white px-4 py-2 rounded-xl font-bold text-xs shadow-md group-hover:scale-105 transition-transform"
+                                        className="bg-[#1F1F1F] text-white px-4 py-2 rounded-xl font-bold text-xs shadow-md group-hover:scale-105 transition-transform w-full sm:w-auto"
                                     >
                                         Start Learning
                                     </button>
@@ -280,7 +230,7 @@ const LandingPage = ({ setIntent }) => {
                         {/* ROW 3: Visual Tracks (Bottom) */}
                         <div
                             onClick={() => navigate('/career')}
-                            className="col-span-6 bg-gradient-to-r from-[#D0EBC6] to-[#E2F5DB] rounded-[1.75rem] p-4 flex items-center justify-between cursor-pointer group hover:shadow-md transition-all border border-white/50 shadow-sm"
+                            className="col-span-12 sm:col-span-6 bg-gradient-to-r from-[#D0EBC6] to-[#E2F5DB] rounded-[1.75rem] p-4 flex items-center justify-between cursor-pointer group hover:shadow-md transition-all border border-white/50 shadow-sm"
                         >
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-[#93C076] rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
@@ -295,7 +245,7 @@ const LandingPage = ({ setIntent }) => {
 
                         <div
                             onClick={() => navigate('/competitive')}
-                            className="col-span-6 bg-gradient-to-r from-[#FBCFE8] to-[#FCE7F3] rounded-[1.75rem] p-4 flex items-center justify-between cursor-pointer group hover:shadow-md transition-all border border-white/50 shadow-sm"
+                            className="col-span-12 sm:col-span-6 bg-gradient-to-r from-[#FBCFE8] to-[#FCE7F3] rounded-[1.75rem] p-4 flex items-center justify-between cursor-pointer group hover:shadow-md transition-all border border-white/50 shadow-sm"
                         >
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-[#EC4899] rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
@@ -333,7 +283,9 @@ const LandingPage = ({ setIntent }) => {
             </main>
 
             {/* Right Panel */}
-            <RightSidebar />
+            <div className="hidden xl:block h-full">
+                <RightSidebar />
+            </div>
 
         </div>
     );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RightSidebar from '../components/RightSidebar';
 import {
@@ -7,83 +7,185 @@ import {
     CheckCircle, AlertTriangle, XCircle, ArrowRight,
     TrendingUp, Activity, Clock, Target, Zap, Trophy, Briefcase
 } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
+
+// Removed duplicate import
+
+// --- Smooth Line Chart Helper ---
+// --- Linear Chart Helper (Matching Reference) ---
+// --- Linear Chart Helper (Matching Reference Exact) ---
+// --- Linear Chart Helper (Full Width & Responsive) ---
+// --- Smooth Area Chart Helper (Premium & Responsive) ---
+const ResponsiveAreaChart = () => {
+    // Mock Data for Smooth Curve
+    const data = [
+        { label: 'S', value: 20 },
+        { label: 'M', value: 35 },
+        { label: 'T', value: 25 },
+        { label: 'W', value: 45 },
+        { label: 'T', value: 30 },
+        { label: 'F', value: 55 },
+        { label: 'S', value: 40 },
+    ];
+
+    const width = 1000;
+    const height = 300;
+    const padding = { left: 40, right: 10, top: 40, bottom: 40 };
+    const chartWidth = width - padding.left - padding.right;
+    const chartHeight = height - padding.top - padding.bottom;
+    const yMax = 60;
+
+    // Helper to control cubic bezier curvature (0 = linear, 0.5 = smooth)
+    const smoothing = 0.2;
+
+    // Calculate control point for bezier curve
+    const controlPoint = (current, previous, next, reverse) => {
+        const p = previous || current;
+        const n = next || current;
+        const o = {
+            x: n.x - p.x,
+            y: n.y - p.y
+        };
+        const r = reverse ? Math.PI : 0;
+        const theta = Math.atan2(o.y, o.x) + r;
+        const length = Math.sqrt(Math.pow(o.x, 2) + Math.pow(o.y, 2)) * smoothing;
+        const x = current.x + Math.cos(theta) * length;
+        const y = current.y + Math.sin(theta) * length;
+        return { x, y };
+    };
+
+    const getPoints = (dataset) => {
+        const xStep = chartWidth / (dataset.length - 1);
+        return dataset.map((d, i) => ({
+            x: padding.left + i * xStep,
+            y: padding.top + chartHeight - (d.value / yMax) * chartHeight,
+            value: d.value,
+            label: d.label
+        }));
+    };
+
+    const generateBezierPath = (points) => {
+        let d = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 1; i < points.length; i++) {
+            const startCP = controlPoint(points[i - 1], points[i - 2], points[i], false);
+            const endCP = controlPoint(points[i], points[i - 1], points[i + 1], true);
+            d += ` C ${startCP.x} ${startCP.y}, ${endCP.x} ${endCP.y}, ${points[i].x} ${points[i].y}`;
+        }
+        return d;
+    };
+
+    const points = getPoints(data);
+    const pathD = generateBezierPath(points);
+    const areaD = `${pathD} L ${points[points.length - 1].x} ${height - padding.bottom} L ${padding.left} ${height - padding.bottom} Z`;
+
+    return (
+        <div className="w-full h-full bg-white rounded-xl p-2 relative overflow-hidden">
+            <svg viewBox="0 0 1000 300" className="w-full h-full overflow-visible">
+                <defs>
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#818CF8" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="#818CF8" stopOpacity="0" />
+                    </linearGradient>
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                {/* Horizontal Grid Lines */}
+                {[0, 20, 40, 60].map((tick) => {
+                    const y = padding.top + chartHeight - (tick / yMax) * chartHeight;
+                    return (
+                        <g key={`h-${tick}`}>
+                            <line
+                                x1={padding.left} y1={y}
+                                x2={width - padding.right} y2={y}
+                                stroke="#F1F5F9" strokeWidth="1" strokeDasharray="4,4"
+                            />
+                            <text
+                                x={padding.left - 10} y={y + 4}
+                                className="text-[12px] fill-slate-400 font-medium"
+                                textAnchor="end"
+                            >
+                                {tick}
+                            </text>
+                        </g>
+                    );
+                })}
+
+                {/* Area Fill */}
+                <path d={areaD} fill="url(#areaGradient)" />
+
+                {/* Line Path */}
+                <path
+                    d={pathD}
+                    fill="none"
+                    stroke="#6366F1"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    filter="url(#glow)"
+                />
+
+                {/* Points */}
+                {points.map((p, i) => (
+                    <g key={`p-${i}`} className="group">
+                        <circle
+                            cx={p.x} cy={p.y} r="6"
+                            fill="white" stroke="#6366F1" strokeWidth="3"
+                            className="transition-all duration-300 group-hover:r-8 z-10"
+                        />
+                        {/* Tooltip on Hover */}
+                        <g className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                            <rect x={p.x - 20} y={p.y - 40} width="40" height="25" rx="6" fill="#1E293B" />
+                            <text x={p.x} y={p.y - 23} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
+                                {p.value}%
+                            </text>
+                            <path d={`M ${p.x} ${p.y - 15} L ${p.x - 5} ${p.y - 15} L ${p.x} ${p.y - 10} L ${p.x + 5} ${p.y - 15} Z`} fill="#1E293B" />
+                        </g>
+                    </g>
+                ))}
+
+                {/* X-Axis Labels */}
+                {points.map((p, i) => (
+                    <text
+                        key={`x-${i}`}
+                        x={p.x}
+                        y={height - 10}
+                        textAnchor="middle"
+                        className="text-[14px] fill-slate-500 font-bold"
+                    >
+                        {p.label}
+                    </text>
+                ))}
+            </svg>
+        </div>
+    );
+};
 
 const AnalyticsPage = () => {
     const navigate = useNavigate();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [activeTab, setActiveTab] = useState('Academic');
 
-    const NavItem = ({ icon: Icon, label, active, onClick }) => (
-        <button
-            onClick={onClick}
-            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 group ${active
-                ? 'bg-white/10 text-white font-medium shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-            title={isSidebarCollapsed ? label : ''}
-        >
-            <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-gray-500 group-hover:text-white'}`} />
-            {!isSidebarCollapsed && <span className="text-sm tracking-wide">{label}</span>}
-        </button>
-    );
 
     return (
-        <div className="flex h-screen w-full bg-[#FAF9F4] p-3 gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
             {/* Sidebar - Compact (Global Copy) */}
-            <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-56'} bg-[#1F1F1F] rounded-[1.5rem] p-4 flex flex-col hidden md:flex shrink-0 shadow-2xl shadow-black/5 z-20 transition-all duration-300 relative`}>
-                <button
-                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    className="absolute -right-3 top-10 w-6 h-6 bg-[#1F1F1F] rounded-full shadow-lg border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 z-50 transition-colors"
-                >
-                    {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-                </button>
-
-                <div className={`flex items-center gap-3 mb-8 px-2 pt-1 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#1F1F1F] font-bold text-lg shadow-md shrink-0">M</div>
-                    {!isSidebarCollapsed && <span className="font-bold text-base tracking-tight text-white whitespace-nowrap overflow-hidden">MasteryLoop</span>}
-                </div>
-                <div className="flex-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
-                    <section>
-                        {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">General</div>}
-                        <nav className="space-y-0.5">
-                            <NavItem icon={LayoutGrid} label="Dashboard" onClick={() => navigate('/')} />
-                            <NavItem icon={BookOpen} label="Academic" onClick={() => navigate('/academic')} />
-                            <NavItem icon={Trophy} label="Competitive" onClick={() => navigate('/competitive')} />
-                            <NavItem icon={Briefcase} label="Career" onClick={() => navigate('/career')} />
-                            <NavItem icon={BarChart2} label="Analytics" active />
-                            <NavItem icon={Calendar} label="Schedule" onClick={() => navigate('/schedule')} />
-                        </nav>
-                    </section>
-                    <section>
-                        {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">Tools</div>}
-                        <nav className="space-y-0.5">
-                            <NavItem icon={Settings} label="Search" />
-                            <NavItem icon={LogOut} label="Log out" />
-                        </nav>
-                    </section>
-                </div>
-                <div className="mt-auto pt-4 border-t border-white/5">
-                    <div className={`bg-white/5 p-2 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-inner shrink-0" />
-                        {!isSidebarCollapsed && (
-                            <div className="overflow-hidden">
-                                <div className="text-sm font-bold text-white whitespace-nowrap">Guest User</div>
-                                <div className="text-[10px] text-gray-400 font-medium whitespace-nowrap">Student Plan</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </aside>
+            <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 mx-2 h-full relative">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-y-auto scrollbar-hide">
                 {/* Header (Compact) */}
-                <div className="flex items-end justify-between mb-6 px-1 pt-2">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end justify-between mb-6 px-4 md:px-1 pt-16 md:pt-2">
                     <div>
-                        <h1 className="text-3xl font-bold text-[#1F1F1F] tracking-tight mb-1">Learning Analytics</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold text-[#1F1F1F] tracking-tight mb-1">Learning Analytics</h1>
                         <p className="text-gray-500 font-medium text-sm">Understand how you learn, where you struggle, and what to improve next.</p>
                     </div>
-                    <div className="flex bg-white rounded-xl p-1 shadow-sm border border-slate-100">
+                    <div className="flex bg-white rounded-xl p-1 shadow-sm border border-slate-100 self-start md:self-auto">
                         {['Academic', 'Competitive', 'Career'].map(tab => (
                             <button
                                 key={tab}
@@ -96,7 +198,7 @@ const AnalyticsPage = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto scrollbar-hide pb-6 pr-2">
+                <div className="flex-1 pb-6 px-4 md:px-0 md:pr-2">
                     {/* 2. High-Level Progress Summary */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         {[
@@ -116,32 +218,25 @@ const AnalyticsPage = () => {
                         ))}
                     </div>
 
-                    {/* 3. Learning Trend (Primary Visual) */}
-                    <div className="bg-white rounded-[1.5rem] p-6 border border-slate-100 shadow-sm mb-6 relative overflow-hidden">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-[#1F1F1F]">Conceptual Accuracy Over Time</h3>
-                            <div className="flex gap-2">
-                                <span className="w-3 h-3 rounded-full bg-indigo-500"></span>
-                                <span className="text-xs font-medium text-gray-500">Accuracy</span>
+                    {/* 3. Learning Trend (Visual Graph) */}
+                    <div className="bg-white rounded-[1.5rem] p-6 border border-slate-100 shadow-sm mb-6 relative overflow-hidden group">
+                        <div className="flex justify-between items-center mb-8">
+                            <div>
+                                <h3 className="font-bold text-[#1F1F1F]">Conceptual Accuracy Over Time</h3>
+                                <div className="text-xs text-slate-400 mt-1">Comparison with previous performance</div>
+                            </div>
+                            {/* Legend */}
+                            <div className="flex gap-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                                    <span className="text-xs font-bold text-gray-500">Performance</span>
+                                </div>
                             </div>
                         </div>
-                        {/* Mock Chart Area */}
-                        <div className="h-48 w-full flex items-end justify-between gap-2 px-2">
-                            {[65, 70, 68, 75, 72, 80, 78, 85, 82, 88, 85, 90, 88, 92].map((h, i) => (
-                                <div key={i} className="w-full h-full bg-indigo-50 rounded-t-sm relative group">
-                                    <div
-                                        className="absolute bottom-0 left-0 right-0 bg-indigo-500 rounded-t-sm transition-all duration-500 hover:bg-indigo-600"
-                                        style={{ height: `${h}%` }}
-                                    />
-                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                                        {h}% Accuracy
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="flex justify-between mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2">
-                            <span>2 Weeks Ago</span>
-                            <span>Today</span>
+
+                        {/* SVG Line Chart */}
+                        <div className="w-full h-64 select-none">
+                            <ResponsiveAreaChart />
                         </div>
                     </div>
 
@@ -221,13 +316,13 @@ const AnalyticsPage = () => {
                     </div>
 
                     {/* 7. Action-Oriented Footer */}
-                    <div className="bg-[#1F1F1F] rounded-[1.5rem] p-6 text-white flex items-center justify-between shadow-lg">
-                        <div>
+                    <div className="bg-[#1F1F1F] rounded-[1.5rem] p-6 text-white flex flex-col md:flex-row items-center justify-between shadow-lg gap-4">
+                        <div className="text-center md:text-left">
                             <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1">Recommended Focus</div>
                             <h3 className="text-xl font-bold">Process Synchronization</h3>
                             <p className="text-sm text-white/70">Weakest area this week. High impact on improved scores.</p>
                         </div>
-                        <button className="px-6 py-3 bg-white text-[#1F1F1F] rounded-xl font-bold text-sm hover:bg-gray-100 transition-all flex items-center gap-2">
+                        <button className="w-full md:w-auto px-6 py-3 bg-white text-[#1F1F1F] rounded-xl font-bold text-sm hover:bg-gray-100 transition-all flex items-center justify-center gap-2">
                             Start Focus Session <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>
@@ -235,7 +330,9 @@ const AnalyticsPage = () => {
                 </div>
             </main>
 
-            <RightSidebar />
+            <div className="hidden xl:block h-full">
+                <RightSidebar />
+            </div>
         </div>
     );
 };

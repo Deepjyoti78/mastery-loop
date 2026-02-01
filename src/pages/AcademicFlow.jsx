@@ -12,6 +12,8 @@ import { getSubjectData, curriculum } from '../data/curriculum';
 import { generateLearningCard } from '../services/aiService';
 import RightSidebar from '../components/RightSidebar';
 
+import Sidebar from '../components/Sidebar';
+
 const AcademicFlow = () => {
     const navigate = useNavigate();
     const { subjectId } = useParams();
@@ -210,21 +212,6 @@ const AcademicFlow = () => {
         );
     };
 
-    // --- Sidebar Nav Item ---
-    const NavItem = ({ icon: Icon, label, active, onClick }) => (
-        <button
-            onClick={onClick}
-            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 group ${active
-                ? 'bg-white/10 text-white font-medium shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-            title={isSidebarCollapsed ? label : ''}
-        >
-            <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-gray-500 group-hover:text-white'}`} />
-            {!isSidebarCollapsed && <span className="text-sm tracking-wide">{label}</span>}
-        </button>
-    );
-
     if (!subjectData) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
     // --- Data Flattening ---
@@ -243,77 +230,39 @@ const AcademicFlow = () => {
     }, []);
 
     return (
-        <div className="flex h-screen w-full bg-[#FAF9F4] p-3 gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
 
-            {/* 1. SIDEBAR */}
-            <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-56'} bg-[#1F1F1F] rounded-[1.5rem] p-4 flex flex-col hidden md:flex shrink-0 shadow-2xl shadow-black/5 z-20 transition-all duration-300 relative`}>
-                <button
-                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    className="absolute -right-3 top-10 w-6 h-6 bg-[#1F1F1F] rounded-full shadow-lg border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 z-50 transition-colors"
-                >
-                    {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-                </button>
-
-                <div className={`flex items-center gap-3 mb-8 px-2 pt-1 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#1F1F1F] font-bold text-lg shadow-md shrink-0">M</div>
-                    {!isSidebarCollapsed && <span className="font-bold text-base tracking-tight text-white whitespace-nowrap overflow-hidden">MasteryLoop</span>}
-                </div>
-
-                <div className="flex-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
-                    <section>
-                        {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">General</div>}
-                        <nav className="space-y-0.5">
-                            <NavItem icon={LayoutGrid} label="Dashboard" onClick={() => navigate('/')} />
-                            <NavItem icon={Target} label="Today's Focus" onClick={() => navigate('/today-focus')} />
-                            <NavItem icon={BookOpen} label="Academic" active />
-                            <NavItem icon={Trophy} label="Competitive" onClick={() => navigate('/competitive')} />
-                            <NavItem icon={Briefcase} label="Career" onClick={() => navigate('/career')} />
-                            <NavItem icon={BarChart2} label="Analytics" onClick={() => navigate('/analytics')} />
-                            <NavItem icon={Calendar} label="Schedule" onClick={() => navigate('/schedule')} />
-                        </nav>
-                    </section>
-                    <section>
-                        {!isSidebarCollapsed && <div className="text-[10px] font-extrabold text-gray-600 uppercase tracking-widest mb-2 px-3 whitespace-nowrap">Tools</div>}
-                        <nav className="space-y-0.5">
-                            <NavItem icon={Settings} label="Settings" onClick={() => navigate('/settings')} />
-                            <NavItem icon={LogOut} label="Log out" onClick={handleLogout} />
-                        </nav>
-                    </section>
-                </div>
-                <div className="mt-auto pt-4 border-t border-white/5">
-                    <div className="bg-white/5 p-2 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-inner" />
-                        {!isSidebarCollapsed && (
-                            <div className="overflow-hidden">
-                                <div className="text-sm font-bold text-white whitespace-nowrap">{currentUser?.name || 'Guest'}</div>
-                                <div className="text-[10px] text-gray-400 font-medium whitespace-nowrap">{currentUser?.role || 'Student'}</div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </aside>
+            {/* 1. SIDEBAR - Global Component */}
+            <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* 2. MAIN CONTENT AREA */}
-            <main className="flex-1 flex flex-col min-w-0 mx-2 h-full relative">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative">
 
-                {/* Header */}
-                <header className="absolute top-0 left-0 right-0 z-50 h-14 flex items-center justify-between shrink-0 pt-2 px-4 gap-3 pointer-events-none">
-                    <div className="flex-1"></div>
-                    <div className="flex items-center gap-3">
-                        <div className="pointer-events-auto flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-black/5 w-64">
-                            <Search className="w-4 h-4 text-gray-400" />
-                            <input type="text" placeholder="Search..." className="flex-1 bg-transparent text-sm outline-none" />
+                {/* Header - Standardized for Consistency */}
+                <header className="absolute top-0 left-0 right-0 z-10 h-20 flex flex-col justify-center gap-4 md:flex-row md:items-center md:justify-between px-4 md:px-2 shrink-0 pt-20 md:pt-4 pointer-events-none bg-[#FAF9F4]/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none transition-all pb-4">
+                    <div className="pointer-events-auto">
+                        <h1 className="text-xl md:text-2xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2">
+                            Academic Flow
+                        </h1>
+                        <p className="text-[#1F1F1F]/60 font-medium text-sm">Explore your interactive learning roadmap.</p>
+                    </div>
+
+                    <div className="flex items-center gap-3 pointer-events-auto self-end md:self-auto w-full md:w-auto justify-end">
+                        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-black/5 w-full md:w-56 transition-all hover:shadow-md h-10">
+                            <Search className="w-3.5 h-3.5 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search concepts..."
+                                className="flex-1 bg-transparent border-none outline-none text-xs font-medium placeholder:text-gray-400 text-[#1F1F1F]"
+                            />
                         </div>
-                        <div className="pointer-events-auto">
-                            <button className="relative p-2 bg-white rounded-full shadow-sm border border-black/5">
-                                <Bell className="w-4 h-4 text-[#1F1F1F]" />
-                                <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-white" />
-                            </button>
-                        </div>
+                        <button className="p-2.5 bg-white rounded-full shadow-sm border border-black/5 hover:bg-gray-50 transition-colors shrink-0">
+                            <Bell className="w-4 h-4 text-[#1F1F1F]" />
+                        </button>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar pt-20 pb-10 px-4 md:px-8">
+                <div className="flex-1 overflow-y-auto custom-scrollbar pt-44 md:pt-24 pb-10 px-4 md:px-8">
                     {/* --- SQUARE GRID --- */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto pb-20">
                         {timelineNodes.map((node, i) => {
@@ -564,7 +513,9 @@ const AcademicFlow = () => {
                 </div>
             )}
 
-            <RightSidebar />
+            <div className="hidden xl:block h-full">
+                <RightSidebar />
+            </div>
         </div>
     );
 };

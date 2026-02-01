@@ -301,29 +301,72 @@ const SetupPage = () => {
 
                     <div className="space-y-4">
                         {q.type === 'slider' ? (
-                            <div className="bg-white p-8 rounded-[1.75rem] border border-slate-100 shadow-xl shadow-slate-200/40 text-center">
-                                <div className="text-5xl font-extrabold mb-6 text-[#1F1F1F] tracking-tighter">
-                                    {answers.time}
-                                    <span className="text-xl text-slate-400 font-bold ml-2">min/day</span>
+                            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-2xl shadow-indigo-500/10 text-center relative overflow-hidden group">
+                                {/* Decorative Background Blob */}
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full blur-3xl -z-10 opacity-60"></div>
+
+                                <div className="mb-8">
+                                    <div className="text-6xl font-black text-[#1F1F1F] tracking-tighter flex items-center justify-center gap-1">
+                                        {answers.time}
+                                        <span className="text-lg text-slate-400 font-bold self-end mb-2">min</span>
+                                    </div>
+                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mt-2 transition-colors duration-300 ${answers.time <= 30 ? 'bg-green-100 text-green-700' :
+                                            answers.time <= 60 ? 'bg-indigo-100 text-indigo-700' :
+                                                'bg-purple-100 text-purple-700'
+                                        }`}>
+                                        <Clock className="w-3 h-3" />
+                                        {answers.time <= 30 ? "Light Session" :
+                                            answers.time <= 60 ? "Steady Progress" :
+                                                "Deep Dive"}
+                                    </div>
                                 </div>
-                                <input
-                                    type="range"
-                                    min={q.min}
-                                    max={q.max}
-                                    step={q.step}
-                                    value={answers.time}
-                                    onChange={(e) => setAnswers(prev => ({ ...prev, time: e.target.value }))}
-                                    className="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer accent-[#1F1F1F] hover:accent-black"
-                                />
-                                <div className="flex justify-between text-xs font-bold text-slate-400 mt-6 uppercase tracking-wider">
-                                    <span>{q.min} min</span>
-                                    <span>{q.max} min</span>
+
+                                <div className="relative h-12 flex items-center justify-center mb-8 px-2">
+                                    {/* Custom Track Background */}
+                                    <div className="absolute w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full transition-all duration-300 rounded-full ${answers.time <= 30 ? 'bg-green-400' :
+                                                answers.time <= 60 ? 'bg-indigo-500' :
+                                                    'bg-purple-600'
+                                                }`}
+                                            // Simple width calculation for visual track
+                                            style={{ width: `${((answers.time - q.min) / (q.max - q.min)) * 100}%` }}
+                                        ></div>
+                                    </div>
+
+                                    {/* Actual slider (invisible but functional) */}
+                                    <input
+                                        type="range"
+                                        min={q.min}
+                                        max={q.max}
+                                        step={q.step}
+                                        value={answers.time}
+                                        onChange={(e) => setAnswers(prev => ({ ...prev, time: parseInt(e.target.value) }))}
+                                        className="relative w-full h-12 opacity-0 cursor-pointer z-10"
+                                    />
+
+                                    {/* Custom Thumb (Visual only) */}
+                                    <div
+                                        className="absolute h-8 w-8 bg-white border-4 border-[#1F1F1F] rounded-full shadow-lg pointer-events-none transition-all duration-300 z-0 flex items-center justify-center"
+                                        style={{
+                                            left: `calc(${((answers.time - q.min) / (q.max - q.min)) * 100}% - 16px)`
+                                        }}
+                                    >
+                                        <div className="w-2 h-2 bg-[#1F1F1F] rounded-full"></div>
+                                    </div>
                                 </div>
+
+                                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+                                    <span>Quick ({q.min}m)</span>
+                                    <span>Intense ({q.max}m)</span>
+                                </div>
+
                                 <button
                                     onClick={() => handleQuizAnswer('time', answers.time)}
-                                    className="mt-8 w-full py-3.5 bg-[#1F1F1F] text-white rounded-xl font-bold text-base hover:bg-black hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                                    className="mt-10 w-full py-4 bg-[#1F1F1F] text-white rounded-2xl font-bold text-lg hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-2 group-hover:shadow-2xl"
                                 >
-                                    Continue
+                                    Confirm Schedule
+                                    <ArrowRight className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
                                 </button>
                             </div>
                         ) : (

@@ -9,6 +9,7 @@ import {
     FileText, Zap, ChevronDown, Rocket, Sliders,
     TrendingUp, Activity, Lock, RefreshCw, Star
 } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
 import { generateCareerProfile } from '../services/aiService';
 import { extractTextFromPDF } from '../utils/resumeParser';
 
@@ -89,19 +90,6 @@ const CareerPage = () => {
     });
 
     // --- Standard Sidebar Navigation ---
-    const NavItem = ({ icon: Icon, label, active, onClick }) => (
-        <button
-            onClick={onClick}
-            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-200 group ${active
-                ? 'bg-white/10 text-white font-medium shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-            title={isSidebarCollapsed ? label : ''}
-        >
-            <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-gray-500 group-hover:text-white'}`} />
-            {!isSidebarCollapsed && <span className="text-sm tracking-wide">{label}</span>}
-        </button>
-    );
 
     // --- Actions ---
     const handleFileUpload = (e) => {
@@ -481,45 +469,23 @@ const CareerPage = () => {
     );
 
     return (
-        <div className="flex h-screen w-full bg-[#FAF9F4] p-3 gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
             {/* Sidebar (Standard) */}
-            <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-56'} bg-[#1F1F1F] rounded-[1.5rem] p-4 flex flex-col hidden md:flex shrink-0 shadow-2xl shadow-black/5 z-20 transition-all duration-300 relative`}>
-                <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="absolute -right-3 top-10 w-6 h-6 bg-[#1F1F1F] rounded-full shadow-lg border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 z-50 transition-colors">
-                    {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-                </button>
-                <div className={`flex items-center gap-3 mb-8 px-2 pt-1 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#1F1F1F] font-bold text-lg shadow-md shrink-0">M</div>
-                    {!isSidebarCollapsed && <span className="font-bold text-base tracking-tight text-white whitespace-nowrap overflow-hidden">MasteryLoop</span>}
-                </div>
-                <div className="flex-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
-                    <section>
-                        <nav className="space-y-0.5">
-                            <NavItem icon={LayoutGrid} label="Dashboard" onClick={() => navigate('/')} />
-                            <NavItem icon={Target} label="Today's Focus" onClick={() => navigate('/today-focus')} />
-                            <NavItem icon={BookOpen} label="Academic" onClick={() => navigate('/academic')} />
-                            <NavItem icon={Trophy} label="Competitive" onClick={() => navigate('/competitive')} />
-                            <NavItem icon={Briefcase} label="Career" active />
-                            <NavItem icon={BarChart2} label="Analytics" onClick={() => navigate('/analytics')} />
-                            <NavItem icon={Calendar} label="Schedule" onClick={() => navigate('/schedule')} />
-                        </nav>
-                    </section>
-                </div>
-                <div className="mt-auto pt-4 border-t border-white/5"><div className={`bg-white/5 p-2 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer ${isSidebarCollapsed ? 'justify-center' : ''}`}><div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-inner shrink-0" />{!isSidebarCollapsed && (<div className="overflow-hidden"><div className="text-sm font-bold text-white whitespace-nowrap">Guest User</div><div className="text-[10px] text-gray-400 font-medium whitespace-nowrap">Student Plan</div></div>)}</div></div>
-            </aside>
+            <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 mx-2 h-full relative overflow-y-auto scrollbar-hide">
-                <header className="h-16 flex items-center justify-between px-2 shrink-0">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-y-auto scrollbar-hide">
+                <header className="flex flex-col gap-4 md:flex-row md:items-center justify-between px-4 md:px-2 pt-16 md:pt-2 shrink-0 mb-4">
                     <div>
                         <h1 className="text-xl font-bold text-slate-900 tracking-tight">Career Architecture</h1>
                         <p className="text-xs text-slate-500">Design, Plan, Execute.</p>
                     </div>
                     {careerProfile && (
-                        <button onClick={() => setCareerProfile(null)} className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 underline">Reset Plan</button>
+                        <button onClick={() => setCareerProfile(null)} className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 underline self-start md:self-auto">Reset Plan</button>
                     )}
                 </header>
 
-                <div className="flex-1 max-w-6xl mx-auto w-full pb-10">
+                <div className="flex-1 max-w-6xl mx-auto w-full pb-10 px-4 md:px-0">
                     {!careerProfile ? (
                         <div className="max-w-md mx-auto mt-8 bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                             {isAnalyzing ? (
@@ -537,7 +503,9 @@ const CareerPage = () => {
                 </div>
             </main>
 
-            <RightSidebar />
+            <div className="hidden xl:block h-full">
+                <RightSidebar />
+            </div>
         </div>
     );
 };
