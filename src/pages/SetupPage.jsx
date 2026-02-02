@@ -187,8 +187,8 @@ const SetupPage = () => {
                             <span className="w-2 h-2 rounded-full bg-[#1F1F1F] animate-pulse"></span>
                             <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Step 1 of 4</span>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-[#1F1F1F] leading-tight">
-                            How do you want MasteryLoop to <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-transparent bg-clip-text">train you?</span>
+                        <h1 className="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-[#1F1F1F] leading-[0.9]">
+                            Choose Your Learning Path
                         </h1>
                         <p className="text-lg text-[#1F1F1F]/60 font-medium max-w-2xl mx-auto leading-relaxed">
                             This choice shapes your dashboard, AI coach behavior, and daily study plan.
