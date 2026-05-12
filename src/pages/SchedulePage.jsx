@@ -27,17 +27,17 @@ const SchedulePage = () => {
     const timeSlots = Array.from({ length: 16 }, (_, i) => i + 7); // 07:00 to 22:00
 
     return (
-        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-x-hidden overflow-y-hidden text-[#1F1F1F]">
             {/* Sidebar */}
             <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-x-hidden max-w-full">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 px-4 md:px-1 pt-16 md:pt-2 gap-4 md:gap-0 shrink-0">
-                    <div>
-                        <h1 className="text-3xl font-bold text-[#1F1F1F] tracking-tight mb-1">Your Schedule</h1>
-                        <p className="text-gray-500 font-medium text-sm">Plan and manage your learning sessions.</p>
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 md:mb-6 px-3 md:px-1 pt-14 md:pt-2 gap-3 md:gap-0 shrink-0">
+                    <div className="min-w-0">
+                        <h1 className="text-xl md:text-3xl font-bold text-[#1F1F1F] tracking-tight mb-0.5 md:mb-1">Your Schedule</h1>
+                        <p className="text-gray-500 font-medium text-xs md:text-sm truncate">Plan and manage your learning sessions.</p>
                     </div>
                     <div className="flex items-center gap-3 self-start md:self-auto">
                         <div className="flex bg-white rounded-xl p-1 shadow-sm border border-slate-100">
@@ -58,7 +58,7 @@ const SchedulePage = () => {
                 </div>
 
                 {/* Schedule Grid */}
-                <div className="flex-1 bg-white rounded-[1.5rem] border border-slate-100 flex flex-col overflow-hidden shadow-sm mx-4 md:mx-0 mb-4 md:mb-0">
+                <div className="flex-1 bg-white rounded-[1.5rem] border border-slate-100 flex flex-col overflow-hidden shadow-sm mx-3 md:mx-0 mb-4 md:mb-0">
                     <div className="flex-1 flex flex-col overflow-x-auto">
                         <div className="min-w-[800px] flex flex-col h-full">
                             {/* Week Header */}

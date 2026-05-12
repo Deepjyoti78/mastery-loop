@@ -74,25 +74,25 @@ const LandingPage = ({ setIntent }) => {
     );
 
     return (
-        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-x-hidden overflow-y-hidden text-[#1F1F1F]">
 
             {/* Sidebar */}
             <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-x-hidden max-w-full">
 
                 {/* Top Header */}
-                <header className="absolute top-0 left-0 right-0 z-10 h-20 flex flex-col justify-center gap-4 md:flex-row md:items-center md:justify-between px-4 md:px-2 shrink-0 pt-20 md:pt-4 pointer-events-none bg-[#FAF9F4]/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none transition-all pb-4">
-                    <div className="pointer-events-auto">
-                        <h1 className="text-xl md:text-2xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2">
+                <header className="absolute top-0 left-0 right-0 z-10 flex flex-col justify-center gap-1.5 md:gap-4 md:flex-row md:items-center md:justify-between px-3 md:px-2 shrink-0 pt-12 md:pt-4 pointer-events-none bg-[#FAF9F4]/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none transition-all pb-1.5 md:pb-4">
+                    <div className="pointer-events-auto min-w-0">
+                        <h1 className="text-lg md:text-2xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2">
                             Good morning, {currentUser.name.split(' ')[0]}
                         </h1>
-                        <p className="text-[#1F1F1F]/60 font-medium text-sm">Your Academic Plan</p>
+                        <p className="text-[#1F1F1F]/60 font-medium text-xs md:text-sm truncate">Your Academic Plan</p>
                     </div>
 
-                    <div className="flex items-center gap-3 pointer-events-auto self-end md:self-auto w-full md:w-auto justify-end">
-                        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-black/5 w-full md:w-56 transition-all hover:shadow-md h-10">
+                    <div className="flex items-center gap-2 pointer-events-auto self-end md:self-auto w-full md:w-auto justify-end">
+                        <div className="flex items-center gap-2 bg-white rounded-full px-3 md:px-4 py-1.5 md:py-2 shadow-sm border border-black/5 flex-1 md:flex-none md:w-56 transition-all hover:shadow-md h-9 md:h-10 min-w-0">
                             <Search className="w-3.5 h-3.5 text-gray-400" />
                             <input
                                 type="text"
@@ -100,14 +100,14 @@ const LandingPage = ({ setIntent }) => {
                                 className="flex-1 bg-transparent border-none outline-none text-xs font-medium placeholder:text-gray-400 text-[#1F1F1F]"
                             />
                         </div>
-                        <button className="p-2.5 bg-white rounded-full shadow-sm border border-black/5 hover:bg-gray-50 transition-colors shrink-0">
-                            <Bell className="w-4 h-4 text-[#1F1F1F]" />
+                        <button className="p-2 md:p-2.5 bg-white rounded-full shadow-sm border border-black/5 hover:bg-gray-50 transition-colors shrink-0">
+                            <Bell className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#1F1F1F]" />
                         </button>
                     </div>
                 </header>
 
                 {/* Dashboard Grid - Darker Colors */}
-                <div className="flex-1 min-h-0 pt-44 md:pt-24 px-4 md:px-2 pb-2 overflow-y-auto scrollbar-hide">
+                <div className="flex-1 min-h-0 pt-[8rem] md:pt-24 px-3 md:px-2 pb-2 overflow-y-auto overflow-x-hidden scrollbar-hide">
                     <div className="grid grid-cols-12 gap-5 pb-20 md:pb-1">
 
                         {/* ROW 1: Hero (Col 7) & Mastery (Col 5) */}

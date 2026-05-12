@@ -173,17 +173,17 @@ const AnalyticsPage = () => {
 
 
     return (
-        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-x-hidden overflow-y-hidden text-[#1F1F1F]">
             {/* Sidebar - Compact (Global Copy) */}
             <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-y-auto scrollbar-hide">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-y-auto overflow-x-hidden scrollbar-hide max-w-full">
                 {/* Header (Compact) */}
-                <div className="flex flex-col gap-4 md:flex-row md:items-end justify-between mb-6 px-4 md:px-1 pt-16 md:pt-2">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-[#1F1F1F] tracking-tight mb-1">Learning Analytics</h1>
-                        <p className="text-gray-500 font-medium text-sm">Understand how you learn, where you struggle, and what to improve next.</p>
+                <div className="flex flex-col gap-3 md:gap-4 md:flex-row md:items-end justify-between mb-4 md:mb-6 px-3 md:px-1 pt-14 md:pt-2">
+                    <div className="min-w-0">
+                        <h1 className="text-xl md:text-3xl font-bold text-[#1F1F1F] tracking-tight mb-0.5 md:mb-1">Learning Analytics</h1>
+                        <p className="text-gray-500 font-medium text-xs md:text-sm truncate">Understand how you learn, where you struggle, and what to improve next.</p>
                     </div>
                     <div className="flex bg-white rounded-xl p-1 shadow-sm border border-slate-100 self-start md:self-auto">
                         {['Academic', 'Competitive', 'Career'].map(tab => (
@@ -198,7 +198,7 @@ const AnalyticsPage = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 pb-6 px-4 md:px-0 md:pr-2">
+                <div className="flex-1 pb-6 px-3 md:px-0 md:pr-2">
                     {/* 2. High-Level Progress Summary */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         {[

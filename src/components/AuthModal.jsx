@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ArrowLeft, X } from 'lucide-react';
+import { Eye, EyeOff, X, Loader2 } from 'lucide-react';
+import { apiRegister, apiLogin, setToken } from '../services/apiService';
 
 const AuthModal = ({ isOpen, onClose, defaultMode = 'signup', onAuthenticated }) => {
     const navigate = useNavigate();
     const [mode, setMode] = useState(defaultMode); // 'signup' or 'login'
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     // Form fields
     const [formData, setFormData] = useState({
@@ -21,23 +24,47 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signup', onAuthenticated })
         setMode(mode === 'signup' ? 'login' : 'signup');
         setFormData({ firstName: '', lastName: '', email: '', password: '' });
         setShowPassword(false);
+        setError('');
     };
 
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Simulate auth
-        setTimeout(() => {
-            // Priority: Navigate first if signup
+        setLoading(true);
+        setError('');
+
+        try {
+            let result;
+            if (mode === 'signup') {
+                result = await apiRegister({
+                    name: `${formData.firstName} ${formData.lastName}`.trim(),
+                    email: formData.email,
+                    password: formData.password,
+                });
+            } else {
+                result = await apiLogin({
+                    email: formData.email,
+                    password: formData.password,
+                });
+            }
+
+            // Store JWT token
+            setToken(result.token);
+
+            onAuthenticated(result.user);
+            onClose();
+
             if (mode === 'signup') {
                 navigate('/setup');
             }
-            onAuthenticated({ name: formData.firstName || 'User', email: formData.email });
-            onClose();
-        }, 800);
+        } catch (err) {
+            setError(err.message || 'Something went wrong. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -181,11 +208,20 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'signup', onAuthenticated })
                                 </label>
                             </div>
 
+                            {/* Error message */}
+                            {error && (
+                                <p className="text-[10px] font-semibold text-red-500 text-center -mb-1 animate-fade-in-up">
+                                    {error}
+                                </p>
+                            )}
+
                             <button
                                 type="submit"
-                                className="w-full h-10 bg-black text-white rounded-full font-bold text-xs tracking-wide hover:bg-slate-800 hover:shadow-lg transition-all duration-300 active:scale-[0.98] mt-2 shadow-md shadow-slate-200"
+                                disabled={loading}
+                                className="w-full h-10 bg-black text-white rounded-full font-bold text-xs tracking-wide hover:bg-slate-800 hover:shadow-lg transition-all duration-300 active:scale-[0.98] mt-2 shadow-md shadow-slate-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
-                                {mode === 'signup' ? 'Create Account' : 'Log in'}
+                                {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                {loading ? 'Please wait...' : (mode === 'signup' ? 'Create Account' : 'Log in')}
                             </button>
                         </form>
 

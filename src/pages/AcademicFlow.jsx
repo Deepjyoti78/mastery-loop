@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     BookOpen, Lock, Play,
     ChevronRight, ChevronDown, Check,
     Trophy, ArrowRight, Zap, Target, Search, X, Loader2,
-    Bell
+    Bell, Clock, Layers, Brain
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getSubjectData, curriculum } from '../data/curriculum';
 import { generateLearningCard } from '../services/aiService';
+import { apiSaveProgress, apiGetProgress, apiSaveQuizResult } from '../services/apiService';
 import RightSidebar from '../components/RightSidebar';
 
 import Sidebar from '../components/Sidebar';
@@ -38,6 +39,34 @@ const AcademicFlow = () => {
         setSubjectData(data);
     }, [subjectId]);
 
+    // --- Load persisted progress from PHP backend ---
+    useEffect(() => {
+        const loadProgress = async () => {
+            try {
+                const progressList = await apiGetProgress();
+                if (!progressList || progressList.length === 0) return;
+                setSubjectData(prev => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        modules: prev.modules.map(mod => ({
+                            ...mod,
+                            concepts: mod.concepts.map(c => {
+                                const saved = progressList.find(p => p.concept_id === c.id);
+                                if (!saved) return c;
+                                return { ...c, status: saved.status };
+                            })
+                        }))
+                    };
+                });
+            } catch (e) {
+                // Not authenticated or PHP not running — silently fall through
+                console.info('[Progress] Could not load from PHP backend:', e.message);
+            }
+        };
+        loadProgress();
+    }, []);
+
     const handleLogout = () => {
         localStorage.removeItem('mastery_auth');
         window.location.href = '/';
@@ -54,6 +83,15 @@ const AcademicFlow = () => {
 
         setExpandedCardId(concept.id);
 
+        // --- Save progress to PHP backend (fire & forget) ---
+        apiSaveProgress({
+            concept_id: concept.id,
+            concept_title: concept.title,
+            subject: subjectData?.subject || 'Operating Systems',
+            status: 'in_progress',
+            best_score: 0,
+        }).catch(() => {}); // silent — offline-tolerant
+
         // Serve from cache if available
         if (aiContentCache[concept.id]) {
             return;
@@ -64,13 +102,11 @@ const AcademicFlow = () => {
 
         try {
             const generated = await generateLearningCard(concept.title, concept.difficulty);
-            // Ensure we set state even if object is partial, effectively stopping 'loading'
             setAiContentCache(prev => ({ ...prev, [concept.id]: generated }));
         } catch (error) {
             console.error("Critical Render Error", error);
             setAiContentCache(prev => ({ ...prev, [concept.id]: { definition: "Unable to load content." } }));
         } finally {
-            // Guaranteed to stop loading spinner
             setLoadingCardId(null);
         }
     };
@@ -122,13 +158,12 @@ const AcademicFlow = () => {
         });
     };
 
-    const handleCheckpointAnswer = (optionIndex) => {
+    const handleCheckpointAnswer = async (optionIndex) => {
         if (!activeCheckpoint) return;
 
         const currentQ = activeCheckpoint.questions[activeCheckpoint.currentStep];
         const isCorrect = optionIndex === currentQ.answer;
 
-        // Track wrong answers
         let nextWrongIndices = [...activeCheckpoint.wrongIndices];
         if (!isCorrect) {
             nextWrongIndices.push(activeCheckpoint.currentStep);
@@ -137,27 +172,57 @@ const AcademicFlow = () => {
         const nextStep = activeCheckpoint.currentStep + 1;
 
         if (nextStep >= activeCheckpoint.questions.length) {
-            // Quiz Round Finished
             if (nextWrongIndices.length === 0) {
-                // ALL CORRECT -> Success
+                // --- ALL CORRECT: Save each covered concept as 'completed' ---
+                const totalQ = activeCheckpoint.originalQuestions?.length || activeCheckpoint.questions.length;
+                const score = 100;
+
+                // Save one quiz_result per concept covered in this checkpoint
+                for (const q of (activeCheckpoint.originalQuestions || activeCheckpoint.questions)) {
+                    apiSaveQuizResult({
+                        concept_id: q.id,
+                        score,
+                        passed: true,
+                        mcq_score: score,
+                        conceptual_score: score,
+                        reteach_triggered: false,
+                    }).catch(() => {});
+
+                    apiSaveProgress({
+                        concept_id: q.id,
+                        status: 'completed',
+                        best_score: score,
+                        subject: subjectData?.subject || 'Operating Systems',
+                    }).catch(() => {});
+                }
+
                 setActiveCheckpoint(prev => ({ ...prev, currentStep: nextStep, completed: true }));
             } else {
-                // ERRORS FOUND -> Adaptive Loop
-                // content: "Let's review the concepts you missed."
-                const wrongQuestions = activeCheckpoint.questions.filter((_, idx) => nextWrongIndices.includes(idx));
+                // ERRORS FOUND — Adaptive Loop (also log the attempt)
+                const totalQ = activeCheckpoint.questions.length;
+                const wrongCount = nextWrongIndices.length;
+                const scorePercent = Math.round(((totalQ - wrongCount) / totalQ) * 100);
 
-                // Introduce a small delay or UI transition could be nice, but we'll swap immediately for speed
+                for (const q of activeCheckpoint.questions) {
+                    apiSaveQuizResult({
+                        concept_id: q.id,
+                        score: scorePercent,
+                        passed: false,
+                        reteach_triggered: true,
+                    }).catch(() => {});
+                }
+
+                const wrongQuestions = activeCheckpoint.questions.filter((_, idx) => nextWrongIndices.includes(idx));
                 setActiveCheckpoint(prev => ({
                     ...prev,
-                    questions: wrongQuestions, // New set is ONLY the wrong ones
+                    questions: wrongQuestions,
                     currentStep: 0,
-                    wrongIndices: [], // Reset for new round
-                    isAdaptive: true, // Flag to show "Adaptive Mode" UI
+                    wrongIndices: [],
+                    isAdaptive: true,
                     completed: false
                 }));
             }
         } else {
-            // Next Question
             setActiveCheckpoint(prev => ({ ...prev, currentStep: nextStep, wrongIndices: nextWrongIndices }));
         }
     };
@@ -228,25 +293,25 @@ const AcademicFlow = () => {
     }, []);
 
     return (
-        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-x-hidden overflow-y-hidden text-[#1F1F1F]">
 
             {/* 1. SIDEBAR - Global Component */}
             <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* 2. MAIN CONTENT AREA */}
-            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-x-hidden max-w-full">
 
                 {/* Header - Standardized for Consistency */}
-                <header className="absolute top-0 left-0 right-0 z-10 h-20 flex flex-col justify-center gap-4 md:flex-row md:items-center md:justify-between px-4 md:px-2 shrink-0 pt-20 md:pt-4 pointer-events-none bg-[#FAF9F4]/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none transition-all pb-4">
-                    <div className="pointer-events-auto">
-                        <h1 className="text-xl md:text-2xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2">
+                <header className="absolute top-0 left-0 right-0 z-10 flex flex-col justify-center gap-1.5 md:gap-4 md:flex-row md:items-center md:justify-between px-3 md:px-2 shrink-0 pt-12 md:pt-4 pointer-events-none bg-[#FAF9F4]/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none transition-all pb-1.5 md:pb-4">
+                    <div className="pointer-events-auto min-w-0">
+                        <h1 className="text-lg md:text-2xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2">
                             Academic Flow
                         </h1>
-                        <p className="text-[#1F1F1F]/60 font-medium text-sm">Explore your interactive learning roadmap.</p>
+                        <p className="text-[#1F1F1F]/60 font-medium text-xs md:text-sm truncate">Explore your interactive learning roadmap.</p>
                     </div>
 
-                    <div className="flex items-center gap-3 pointer-events-auto self-end md:self-auto w-full md:w-auto justify-end">
-                        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-black/5 w-full md:w-56 transition-all hover:shadow-md h-10">
+                    <div className="flex items-center gap-2 pointer-events-auto self-end md:self-auto w-full md:w-auto justify-end">
+                        <div className="flex items-center gap-2 bg-white rounded-full px-3 md:px-4 py-1.5 md:py-2 shadow-sm border border-black/5 flex-1 md:flex-none md:w-56 transition-all hover:shadow-md h-9 md:h-10 min-w-0">
                             <Search className="w-3.5 h-3.5 text-gray-400" />
                             <input
                                 type="text"
@@ -254,15 +319,15 @@ const AcademicFlow = () => {
                                 className="flex-1 bg-transparent border-none outline-none text-xs font-medium placeholder:text-gray-400 text-[#1F1F1F]"
                             />
                         </div>
-                        <button className="p-2.5 bg-white rounded-full shadow-sm border border-black/5 hover:bg-gray-50 transition-colors shrink-0">
-                            <Bell className="w-4 h-4 text-[#1F1F1F]" />
+                        <button className="p-2 md:p-2.5 bg-white rounded-full shadow-sm border border-black/5 hover:bg-gray-50 transition-colors shrink-0">
+                            <Bell className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#1F1F1F]" />
                         </button>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar pt-44 md:pt-24 pb-10 px-4 md:px-8">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pt-[8rem] md:pt-24 pb-6 md:pb-10 px-3 md:px-8">
                     {/* --- SQUARE GRID --- */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto pb-20">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 max-w-7xl mx-auto pb-10 md:pb-20">
                         {timelineNodes.map((node, i) => {
                             if (node.type === 'checkpoint') {
                                 // --- CHECKPOINT CARD ---
@@ -270,23 +335,23 @@ const AcademicFlow = () => {
                                 return (
                                     <div key={node.id}
                                         onClick={() => handleCheckpointClick(node)}
-                                        className={`aspect-[4/5] rounded-2xl p-5 relative flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer ${isPink ? 'bg-pink-100' : 'bg-[#E3F5E3]'}`}
+                                        className={`aspect-auto sm:aspect-[4/5] rounded-xl sm:rounded-2xl p-3 sm:p-5 relative flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer min-h-[100px] sm:min-h-0 ${isPink ? 'bg-pink-100' : 'bg-[#E3F5E3]'}`}
                                     >
                                         <div>
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${isPink ? 'bg-pink-500 text-white' : 'bg-green-600 text-white'}`}>
-                                                <Trophy size={20} />
+                                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-4 ${isPink ? 'bg-pink-500 text-white' : 'bg-green-600 text-white'}`}>
+                                                <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
                                             </div>
-                                            <h3 className="text-base font-bold text-slate-800 leading-tight mb-1">
+                                            <h3 className="text-xs sm:text-base font-bold text-slate-800 leading-tight mb-0.5 sm:mb-1">
                                                 Mastery Checkpoint
                                             </h3>
-                                            <p className="text-[10px] text-slate-600 font-medium">
+                                            <p className="text-[9px] sm:text-[10px] text-slate-600 font-medium hidden sm:block">
                                                 Verify your retention.
                                             </p>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Take Quiz</span>
-                                            <button className={`w-8 h-8 rounded-full flex items-center justify-center hover:scale-110 transition-transform ${isPink ? 'bg-pink-200 text-pink-700' : 'bg-green-200 text-green-700'}`}>
-                                                <Play size={14} fill="currentColor" />
+                                            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500">Take Quiz</span>
+                                            <button className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:scale-110 transition-transform ${isPink ? 'bg-pink-200 text-pink-700' : 'bg-green-200 text-green-700'}`}>
+                                                <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="currentColor" />
                                             </button>
                                         </div>
                                     </div>
@@ -310,7 +375,7 @@ const AcademicFlow = () => {
                                 const content = aiContentCache[node.id] || {}; // Fallback safe
 
                                 return (
-                                    <div key={node.id} className="col-span-1 sm:col-span-2 lg:col-span-3 row-span-2 bg-white rounded-2xl shadow-xl relative flex flex-col h-[600px] overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50 ring-1 ring-black/5">
+                                    <div key={node.id} className="col-span-1 xs:col-span-2 sm:col-span-2 lg:col-span-3 row-span-2 bg-white rounded-2xl shadow-xl relative flex flex-col h-[80vh] sm:h-[600px] overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50 ring-1 ring-black/5">
                                         {/* Minimal Header */}
                                         <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-start bg-white rounded-t-2xl sticky top-0 z-10 gap-3">
                                             <div className="flex items-start gap-3 flex-1 overflow-hidden">
@@ -405,14 +470,14 @@ const AcademicFlow = () => {
                                     key={node.id}
                                     onClick={() => handleCardClick(node)}
                                     className={`
-                                        aspect-[4/5] rounded-2xl p-5 relative flex flex-col justify-between group 
+                                        aspect-auto sm:aspect-[4/5] rounded-xl sm:rounded-2xl p-3 sm:p-5 relative flex flex-col justify-between group min-h-[100px] sm:min-h-0
                                         ${theme.bg} ${isLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}
                                         transition-all duration-300 hover:shadow-lg
                                     `}
                                 >
                                     <div>
-                                        <div className="flex justify-between items-start mb-3">
-                                            <span className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider opacity-80 ${isLocked ? 'bg-slate-200' : 'bg-white/40'}`}>
+                                        <div className="flex justify-between items-start mb-1.5 sm:mb-3">
+                                            <span className={`inline-block px-1.5 sm:px-2 py-0.5 rounded-md text-[8px] sm:text-[9px] font-bold uppercase tracking-wider opacity-80 ${isLocked ? 'bg-slate-200' : 'bg-white/40'}`}>
                                                 {node.difficulty}
                                             </span>
                                             {node.status === 'mastered' ? (
@@ -421,19 +486,19 @@ const AcademicFlow = () => {
                                                 <Lock size={12} className="text-slate-400" />
                                             )}
                                         </div>
-                                        <h3 className={`text-base font-bold leading-tight mb-2 tracking-tight ${theme.text}`}>
+                                        <h3 className={`text-xs sm:text-base font-bold leading-tight mb-1 sm:mb-2 tracking-tight ${theme.text}`}>
                                             {node.title}
                                         </h3>
-                                        <p className={`text-[10px] font-medium leading-relaxed opacity-80 line-clamp-3 ${theme.sub}`}>
+                                        <p className={`text-[9px] sm:text-[10px] font-medium leading-relaxed opacity-80 line-clamp-2 sm:line-clamp-3 ${theme.sub}`}>
                                             {node.desc || "Fundamental concept required for system stability."}
                                         </p>
                                     </div>
-                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-black/5">
-                                        <div className={`text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 ${theme.sub}`}>
-                                            <Clock size={10} /> {node.estimatedTime || '15m'}
+                                    <div className="flex items-center justify-between mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-black/5">
+                                        <div className={`text-[8px] sm:text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 ${theme.sub}`}>
+                                            <Clock className="w-2.5 h-2.5 sm:w-[10px] sm:h-[10px]" /> {node.estimatedTime || '15m'}
                                         </div>
                                         {!isLocked && (
-                                            <button className={`px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm hover:scale-105 transition-transform ${theme.accent}`}>
+                                            <button className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold shadow-sm hover:scale-105 transition-transform ${theme.accent}`}>
                                                 Start
                                             </button>
                                         )}

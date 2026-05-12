@@ -469,23 +469,23 @@ const CareerPage = () => {
     );
 
     return (
-        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-x-hidden overflow-y-hidden text-[#1F1F1F]">
             {/* Sidebar (Standard) */}
             <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-y-auto scrollbar-hide">
-                <header className="flex flex-col gap-4 md:flex-row md:items-center justify-between px-4 md:px-2 pt-16 md:pt-2 shrink-0 mb-4">
-                    <div>
-                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Career Architecture</h1>
-                        <p className="text-xs text-slate-500">Design, Plan, Execute.</p>
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-y-auto overflow-x-hidden scrollbar-hide max-w-full">
+                <header className="flex flex-col gap-3 md:gap-4 md:flex-row md:items-center justify-between px-3 md:px-2 pt-14 md:pt-2 shrink-0 mb-4">
+                    <div className="min-w-0">
+                        <h1 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">Career Architecture</h1>
+                        <p className="text-xs text-slate-500 truncate">Design, Plan, Execute.</p>
                     </div>
                     {careerProfile && (
                         <button onClick={() => setCareerProfile(null)} className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 underline self-start md:self-auto">Reset Plan</button>
                     )}
                 </header>
 
-                <div className="flex-1 max-w-6xl mx-auto w-full pb-10 px-4 md:px-0">
+                <div className="flex-1 max-w-6xl mx-auto w-full pb-10 px-3 md:px-0">
                     {!careerProfile ? (
                         <div className="max-w-md mx-auto mt-8 bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                             {isAnalyzing ? (

@@ -1,0 +1,5 @@
+Options -Indexes
+RewriteEngine On
+
+# Let PHP handle all requests including OPTIONS preflight
+# db.php already sets all CORS headers + handles OPTIONS correctly

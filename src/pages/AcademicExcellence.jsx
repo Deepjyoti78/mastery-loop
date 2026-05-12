@@ -53,13 +53,13 @@ const AcademicExcellence = () => {
     const currentConcepts = conceptMaps[selectedSubject] || [];
 
     return (
-        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-hidden text-[#1F1F1F]">
+        <div className="flex flex-col md:flex-row h-screen w-full bg-[#FAF9F4] md:p-3 md:gap-3 font-sans overflow-x-hidden overflow-y-hidden text-[#1F1F1F]">
 
             {/* Sidebar */}
             <Sidebar isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} />
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative">
+            <main className="flex-1 flex flex-col min-w-0 md:mx-2 h-full relative overflow-x-hidden max-w-full">
 
                 {/* Header */}
                 <header className="absolute top-0 left-0 right-0 z-10 h-14 flex items-center justify-end shrink-0 pt-2 pointer-events-none px-4 gap-3 bg-[#FAF9F4]/90 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none transition-all">
@@ -75,7 +75,7 @@ const AcademicExcellence = () => {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto scrollbar-hide pb-6 md:pr-2 pt-20 md:pt-4 px-4 md:px-0">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide pb-6 md:pr-2 pt-16 md:pt-4 px-3 md:px-0">
                     <div className="mb-6">
                         <h1 className="text-2xl md:text-3xl font-black text-[#1F1F1F] tracking-tight mb-1">Academic Dashboard</h1>
                         <p className="text-gray-500 font-medium text-sm">Track your progress and master new concepts.</p>

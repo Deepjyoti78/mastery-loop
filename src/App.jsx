@@ -22,12 +22,14 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('mastery_auth') === 'true';
+    // Use real JWT token presence as auth check
+    return !!localStorage.getItem('mastery_token');
   });
 
   const handleLogin = (data) => {
     setUserData(data);
     setIsAuthenticated(true);
+    // mastery_token is already stored by AuthModal via apiService.setToken()
     localStorage.setItem('mastery_auth', 'true');
     localStorage.setItem('mastery_user_data', JSON.stringify(data));
   };
